@@ -68,5 +68,20 @@ class WorldGenerator {
                 break; // OK
             }
         }
+
+        $num_rocks = rand(6, 8);
+        while ($num_rocks > 0) {
+            while (true) {
+                $wall_col = rand(1, $num_cols - 1);
+                $wall_row = rand(1, $num_rows - 1);
+                $tile = $world->getTile($wall_row, $wall_col);
+                if (!$world->tileIsFree($tile)) {
+                    continue; // Try again
+                }
+                $tile->kind = MapTile::ROCK;
+                $num_rocks--;
+                break; // OK
+            }
+        }
     }
 }

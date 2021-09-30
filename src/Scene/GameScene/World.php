@@ -54,7 +54,7 @@ class World {
     }
 
     public function tileIsFree(MapTile $tile): bool {
-        if ($tile->kind === MapTile::WALL) {
+        if ($tile->kind === MapTile::WALL || $tile->kind === MapTile::ROCK) {
             return false;
         }
         if ($this->player->pos === $tile->pos) {
