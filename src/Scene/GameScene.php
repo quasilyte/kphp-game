@@ -321,20 +321,41 @@ class GameScene {
         $draw->present();
     }
 
-    private function renderPortal(): void {
+    /**
+     * @param ffi_cdata<sdl, struct SDL_Texture*> $texture
+     */
+    private function renderOneTile($texture, int $row, int $col, int $tile_offset_x = 0, int $tile_offset_y = 0) {
         $draw_rect    = $this->sdl->newRect();
-        $draw_rect->w = GlobalConfig::TILE_WIDTH * 2;
-        $draw_rect->h = GlobalConfig::TILE_HEIGHT * 2;
+        $draw_rect->w = GlobalConfig::TILE_WIDTH;
+        $draw_rect->h = GlobalConfig::TILE_HEIGHT;
+        $draw_rect->x = $tile_offset_x * GlobalConfig::TILE_WIDTH;
+        $draw_rect->y = $tile_offset_y * GlobalConfig::TILE_HEIGHT;
 
-        $tile = $this->world->tiles[$this->world->portal_pos];
+        $tile = $this->world->getTile($row, $col);
         $draw_pos    = $this->sdl->newRect();
         $draw_pos->w = $draw_rect->w;
         $draw_pos->h = $draw_rect->h;
         $draw_pos->x = $tile->col * GlobalConfig::TILE_WIDTH;
         $draw_pos->y = $tile->row * GlobalConfig::TILE_HEIGHT;
 
-        if (!$this->draw->copy($this->portal_texture, \FFI::addr($draw_rect), \FFI::addr($draw_pos))) {
+        if (!$this->draw->copy($texture, \FFI::addr($draw_rect), \FFI::addr($draw_pos))) {
             throw new RuntimeException($this->sdl->getError());
+        }
+    }
+
+    private function renderPortal(): void {
+        $tile = $this->world->tiles[$this->world->portal_pos];
+        if ($tile->revealed) {
+            $this->renderOneTile($this->portal_texture, $tile->row, $tile->col);
+        }
+        if ($this->world->getTile($tile->row, $tile->col+1)->revealed) {
+            $this->renderOneTile($this->portal_texture, $tile->row, $tile->col+1, 1);
+        }
+        if ($this->world->getTile($tile->row+1, $tile->col)->revealed) {
+            $this->renderOneTile($this->portal_texture, $tile->row+1, $tile->col, 0, 1);
+        }
+        if ($this->world->getTile($tile->row+1, $tile->col+1)->revealed) {
+            $this->renderOneTile($this->portal_texture, $tile->row+1, $tile->col+1, 1, 1);
         }
     }
 

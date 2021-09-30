@@ -33,7 +33,7 @@ class WorldGenerator {
         $world->map_rows = $num_rows;
 
         // TODO: random player deployment.
-        $world->player->pos = $world->getTile(3, 3)->pos;
+        $world->player->pos = $world->getTile(7, 7)->pos;
 
         // TODO: spawn random enemies and random places.
         $orc = new Enemy('Orc');
