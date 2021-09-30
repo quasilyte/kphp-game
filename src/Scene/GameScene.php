@@ -4,11 +4,14 @@ namespace KPHPGame\Scene;
 
 use KPHPGame\GlobalConfig;
 use KPHPGame\Logger;
+use KPHPGame\Scene\GameScene\World;
+use KPHPGame\Scene\GameScene\WorldGenerator;
 use Quasilyte\SDLite\EventType;
 use Quasilyte\SDLite\Renderer;
 use Quasilyte\SDLite\Scancode;
 use Quasilyte\SDLite\SDL;
 
+// GameScene is a main gameplay scene.
 class GameScene {
   public function __construct(SDL $sdl) {
     $this->sdl = $sdl;
@@ -24,6 +27,8 @@ class GameScene {
 
     $this->sdl_renderer = $this->sdl->createRenderer($this->sdl_window, -1);
     $draw = new Renderer($this->sdl, $this->sdl_renderer);
+
+    $this->world = WorldGenerator::generate();
 
     Logger::info("starting GameScene event loop");
 
@@ -43,7 +48,7 @@ class GameScene {
   }
 
   /** @param ffi_cdata<sdl, struct SDL_Event> $event */
-  public function processEvents($event): void {
+  private function processEvents($event): void {
     while ($this->sdl->pollEvent($event)) {
       switch ($event->type) {
         case EventType::KEYUP:
@@ -56,6 +61,7 @@ class GameScene {
     }
   }
 
+
   /** @var SDL */
   private $sdl;
 
@@ -64,6 +70,9 @@ class GameScene {
 
   /** @var ffi_cdata<sdl, struct SDL_Renderer*> */
   private $sdl_renderer;
+
+  /** @var World */
+  private $world;
 
   private $escape = false;
 }
