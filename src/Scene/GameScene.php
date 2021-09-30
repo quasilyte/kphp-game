@@ -6,6 +6,7 @@ use FFI;
 use KPHPGame\AssetsManager;
 use KPHPGame\GlobalConfig;
 use KPHPGame\Logger;
+use KPHPGame\Scene\GameScene\Direction;
 use KPHPGame\Scene\GameScene\Events\WorldEventLogger;
 use KPHPGame\Scene\GameScene\MapTile;
 use KPHPGame\Scene\GameScene\PlayerAction;
@@ -143,12 +144,16 @@ class GameScene {
         $delta_row = 0;
         if ($this->player_action === PlayerAction::MOVE_UP) {
             $delta_row = -1;
+            $player->rotation = Direction::UP;
         } elseif ($this->player_action === PlayerAction::MOVE_DOWN) {
             $delta_row = +1;
+            $player->rotation = Direction::DOWN;
         } elseif ($this->player_action === PlayerAction::MOVE_LEFT) {
             $delta_col = -1;
+            $player->rotation = Direction::LEFT;
         } elseif ($this->player_action === PlayerAction::MOVE_RIGHT) {
             $delta_col = +1;
+            $player->rotation = Direction::RIGHT;
         }
         if ($delta_col !== 0 || $delta_row !== 0) {
             if ($this->world->getTile($tile->row + $delta_row, $tile->col + $delta_col)->kind !== MapTile::WALL) {
@@ -184,13 +189,18 @@ class GameScene {
     }
 
     private function renderPlayer(Renderer $draw): void {
-        $rect    = $this->sdl->newRect();
-        $rect->w = 32;
-        $rect->h = 32;
-        $tile    = $this->world->getPlayerTile();
-        $rect->x = $tile->col * 32;
-        $rect->y = $tile->row * 32;
-        if (!$draw->copy($this->player_texture, null, FFI::addr($rect))) {
+        $tile_rect    = $this->sdl->newRect();
+        $tile_rect->w = GlobalConfig::TILE_WIDTH;
+        $tile_rect->h = 48;
+        $tile_rect->x = 32 * $this->world->player->rotation;
+
+        $tile = $this->world->getPlayerTile();
+        $render_pos    = $this->sdl->newRect();
+        $render_pos->w = 32;
+        $render_pos->h = 48;
+        $render_pos->x = $tile->col * 32;
+        $render_pos->y = ($tile->row * 32) - 16;
+        if (!$draw->copy($this->player_texture, FFI::addr($tile_rect), FFI::addr($render_pos))) {
             throw new RuntimeException($this->sdl->getError());
         }
     }

@@ -11,8 +11,7 @@ class World {
     public $map_rows = 0;
     public $map_cols = 0;
 
-    /** @var Player */
-    public $player;
+    public Player $player;
 
     public function __construct() {
         $this->player = new Player();
