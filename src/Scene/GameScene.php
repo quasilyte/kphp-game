@@ -55,6 +55,8 @@ class GameScene {
     /** @var ffi_cdata<sdl, struct SDL_Texture*> */
     private $orc_texture;
     /** @var ffi_cdata<sdl, struct SDL_Texture*> */
+    private $goblin_texture;
+    /** @var ffi_cdata<sdl, struct SDL_Texture*> */
     private $thunder_effect_texture;
     private bool $escape = false;
     private bool $defeat = false;
@@ -150,6 +152,7 @@ class GameScene {
         $this->portal_texture = $this->loadOneTexture(AssetsManager::tile("portal.png"));
         $this->player_texture = $this->loadOneTexture(AssetsManager::unit("Player.png"));
         $this->orc_texture = $this->loadOneTexture(AssetsManager::unit("Orc.png"));
+        $this->goblin_texture = $this->loadOneTexture(AssetsManager::unit("Goblin.png"));
         $this->thunder_effect_texture = $this->loadOneTexture(AssetsManager::magic("thunder_effect.png"));
     }
 
@@ -540,6 +543,8 @@ class GameScene {
         $texture = $this->player_texture;
         if ($unit->name === 'Orc') {
             $texture = $this->orc_texture;
+        } else if ($unit->name === 'Goblin') {
+            $texture = $this->goblin_texture;
         }
 
         if (!$this->draw->copy($texture, \FFI::addr($tile_rect), \FFI::addr($render_pos))) {

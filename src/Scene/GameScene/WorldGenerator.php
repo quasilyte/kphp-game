@@ -36,7 +36,7 @@ class WorldGenerator {
         $world->player->pos = $world->getTile(7, 7)->pos;
 
         // TODO: spawn random enemies and random places.
-        $orc              = new Enemy('Orc');
+        $orc              = Enemy::newOrc();
         $orc->pos         = $world->player->pos + 4;
         $world->enemies[] = $orc;
 
