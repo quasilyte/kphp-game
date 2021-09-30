@@ -202,6 +202,13 @@ class GameScene {
         }
     }
 
+    private function castThunder(): void {
+        foreach ($this->world->enemies as $enemy) {
+            
+
+        }
+    }
+
     private function processPlayerAction(): bool {
         if ($this->defeat) {
             return false;
@@ -225,6 +232,9 @@ class GameScene {
             }
             $player->mp -= $spell->mp_cost;
             $this->world_event_log_renderer->add_event(SpellCastWorldEvent::create($spell));
+            if ($spell === $player->spellbook->thunder) {
+                $this->castThunder();
+            }
             return true;
         }
 
@@ -295,7 +305,8 @@ class GameScene {
 
     private function onPlayerDamageTaken() {
 //        $this->world->player->lvlUp();
-        $this->world_event_log_renderer->add_event(LevelUpWorldEvent::create($this->world->player));
+//        $this->world_event_log_renderer->add_event(LevelUpWorldEvent::create($this->world->player));
+
         if ($this->world->player->hp <= 0) {
             $this->world_event_log_renderer->add_event(DieWorldEvent::create($this->world->player));
             $this->onDefeat();
