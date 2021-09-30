@@ -85,5 +85,6 @@ class WorldEventLogger {
         if (!$this->draw->copy($msg_text, null, \FFI::addr($msg_rect))) {
             throw new \RuntimeException($this->sdl->getError());
         }
+        $this->sdl->destroyTexture($msg_text);
     }
 }
