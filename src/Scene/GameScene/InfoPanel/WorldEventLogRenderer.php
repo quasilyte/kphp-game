@@ -36,12 +36,12 @@ class WorldEventLogRenderer {
      * @param ffi_cdata<sdl, struct SDL_Renderer*> $renderer
      * @param ffi_cdata<sdl_ttf, struct TTF_Font*> $font
      */
-    public function __construct(SDL $sdl, $renderer, Renderer $draw, $font) {
+    public function __construct(SDL $sdl, $renderer, Renderer $draw, $font, Color $text_color) {
         $this->sdl        = $sdl;
         $this->renderer   = $renderer;
         $this->draw       = $draw;
         $this->font       = $font;
-        $this->text_color = new Color(255, 255, 255);
+        $this->text_color = $text_color;
         $this->rect       = $sdl->newRect();
         $this->rect->x    = GlobalConfig::UI_OFFSET + GlobalConfig::TEXT_MARGIN;
         $this->rect->y    = self::defaultRectY();

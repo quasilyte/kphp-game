@@ -12,6 +12,8 @@ class GlobalConfig {
     public const UI_OFFSET   = 1024;
     public const TEXT_MARGIN = 25;
 
+    public const INFO_PANEL_CENTER_OFFSET = GlobalConfig::WINDOW_WIDTH - GlobalConfig::UI_OFFSET;
+
     public const FONT_SIZE = 20;
 
     // Approximately 60fps.

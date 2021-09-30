@@ -5,6 +5,7 @@ namespace KPHPGame\Scene;
 use KPHPGame\AssetsManager;
 use KPHPGame\GlobalConfig;
 use KPHPGame\Logger;
+use KPHPGame\Scene\GameScene\Colors;
 use KPHPGame\Scene\GameScene\Direction;
 use KPHPGame\Scene\GameScene\Enemy;
 use KPHPGame\Scene\GameScene\InfoPanel\Events\AttackWorldEvent;
@@ -14,13 +15,13 @@ use KPHPGame\Scene\GameScene\InfoPanel\Events\SpellCastWorldEvent;
 use KPHPGame\Scene\GameScene\InfoPanel\StatusRenderer;
 use KPHPGame\Scene\GameScene\InfoPanel\WorldEventLogRenderer;
 use KPHPGame\Scene\GameScene\MapTile;
+use KPHPGame\Scene\GameScene\Player;
 use KPHPGame\Scene\GameScene\PlayerAction;
 use KPHPGame\Scene\GameScene\AlertWindowRenderer;
 use KPHPGame\Scene\GameScene\Spell;
 use KPHPGame\Scene\GameScene\Unit;
 use KPHPGame\Scene\GameScene\World;
 use KPHPGame\Scene\GameScene\WorldGenerator;
-use Quasilyte\SDLite\Color;
 use Quasilyte\SDLite\EventType;
 use Quasilyte\SDLite\Renderer;
 use Quasilyte\SDLite\Scancode;
@@ -42,6 +43,7 @@ class GameScene {
     private AlertWindowRenderer $text_block_renderer;
     /** $var ffi_cdata<sdl_ttf, struct TTF_Font*> */
     private $font;
+    private Colors $colors;
     /** @var ffi_cdata<sdl, struct SDL_Texture*> */
     private $tileset_texture;
     /** @var ffi_cdata<sdl, struct SDL_Texture*> */
@@ -57,6 +59,7 @@ class GameScene {
     public function __construct(SDL $sdl) {
         $this->sdl  = $sdl;
         $this->font = $sdl->openFont(AssetsManager::font('FreeMono'), GlobalConfig::FONT_SIZE);
+        $this->colors = new Colors();
     }
 
     public function run() {
@@ -76,13 +79,13 @@ class GameScene {
 
         Logger::info('generating world');
         $this->initWorld();
-        $this->world_event_log_renderer = new WorldEventLogRenderer($this->sdl, $this->sdl_renderer, $draw, $this->font);
-        $this->status_renderer          = new StatusRenderer($this->sdl, $this->sdl_renderer, $draw, $this->font);
+        $this->world_event_log_renderer = new WorldEventLogRenderer($this->sdl, $this->sdl_renderer, $draw, $this->font, $this->colors->white);
+        $this->status_renderer          = new StatusRenderer($this->sdl, $this->sdl_renderer, $draw, $this->font, $this->colors->white);
         $this->text_block_renderer      = new AlertWindowRenderer($this->sdl, $this->draw, $this->sdl_renderer);
 
         Logger::info('rendering world');
 
-        $this->loadTextures($draw);
+        $this->loadTextures();
 
         Logger::info('starting GameScene event loop');
         $this->renderAll($draw);
@@ -99,6 +102,13 @@ class GameScene {
                 $this->renderAll($draw);
             }
 
+            if ($this->world->tileIsPortal()) {
+                Logger::info('i am on portal');
+                $stage = $this->world->stage;
+                $text = ["You find entrance to $stage stage", 'Do you want to go now?[y/n]'];
+                $this->text_block_renderer->render($text, $this->font, $this->colors->white, $this->colors->black);
+            }
+
             $this->player_action = PlayerAction::NONE;
 
             $this->sdl->delay(GlobalConfig::FRAME_DELAY);
@@ -107,14 +117,17 @@ class GameScene {
         // TODO: SDL_DestroyWindow
     }
 
-    private function initWorld() {
-        $this->world = new World();
+    private function initWorld(?Player $player = null, int $stage = 1) {
+        if ($player === null) {
+            $player = new Player();
+        }
+        $this->world = new World($player, $stage);
         WorldGenerator::generate($this->world);
         $this->defeat = false;
         $this->onPlayerMoved();
     }
 
-    private function loadTextures(Renderer $draw): void {
+    private function loadTextures(): void {
         $surface = $this->sdl->imgLoad(AssetsManager::tile("wasteland_compact.png"));
         if (\FFI::isNull($surface)) {
             throw new RuntimeException($this->sdl->getError());
@@ -343,7 +356,7 @@ class GameScene {
         $this->renderPlayer($draw);
         $this->renderEnemies($draw);
         $this->world_event_log_renderer->render();
-        $this->status_renderer->render($this->world->player);
+        $this->status_renderer->render($this->world->player, $this->world->stage);
         if ($this->defeat) {
             $this->renderRestartMenu();
         }
@@ -459,12 +472,10 @@ class GameScene {
     }
 
     private function renderRestartMenu() {
-        $text_color = new Color(255, 30, 30);
-        $back_color = new Color(0, 0, 0);
         $text       = [
             "Game Over",
             "Restart? [y/n]",
         ];
-        $this->text_block_renderer->render($text, $this->font, $text_color, $back_color);
+        $this->text_block_renderer->render($text, $this->font, $this->colors->red, $this->colors->black);
     }
 }

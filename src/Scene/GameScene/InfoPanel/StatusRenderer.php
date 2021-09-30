@@ -29,19 +29,20 @@ class StatusRenderer {
      * @param ffi_cdata<sdl, struct SDL_Renderer*> $renderer
      * @param ffi_cdata<sdl_ttf, struct TTF_Font*> $font
      */
-    public function __construct(SDL $sdl, $renderer, Renderer $draw, $font) {
+    public function __construct(SDL $sdl, $renderer, Renderer $draw, $font, Color $text_color) {
         $this->sdl        = $sdl;
         $this->renderer   = $renderer;
         $this->draw       = $draw;
         $this->font       = $font;
-        $this->text_color = new Color(255, 255, 255);
+        $this->text_color = $text_color;
         $this->rect       = $sdl->newRect();
     }
 
-    public function render(Player $player) {
-        $this->render_block($player->name, 0);
-        $this->render_block('lvl: ' . $player->level . '   exp: ' . $player->exp . '/' . $player->next_level_exp, 1);
-        $this->render_block('HP: ' . ($player->hp > 0 ? $player->hp : 0) . '   MP: ' . $player->mp, 2);
+    public function render(Player $player, int $stage) {
+        $this->render_block('Stage: ' . $stage, 0);
+        $this->render_block($player->name, 1);
+        $this->render_block('Level: ' . $player->level . '   Exp: ' . $player->exp . '/' . $player->next_level_exp, 2);
+        $this->render_block('HP: ' . ($player->hp > 0 ? $player->hp : 0) . '   MP: ' . $player->mp, 3);
     }
 
     private function fill_rect(int $x, int $y, int $w, int $h) {
@@ -50,12 +51,18 @@ class StatusRenderer {
         $this->rect->w = $w;
         $this->rect->h = $h;
     }
-    
+
     private function render_block(string $text, int $y_offset) {
         $text_surface = $this->sdl->renderUTF8Blended($this->font, $text, $this->text_color);
         $text_sizes   = $this->sdl->sizeUTF8($this->font, $text);
         $text_texture = $this->sdl->createTextureFromSurface($this->renderer, $text_surface);
-        $this->fill_rect(GlobalConfig::UI_OFFSET + GlobalConfig::TEXT_MARGIN, GlobalConfig::TEXT_MARGIN * $y_offset + $text_sizes[1], $text_sizes[0], $text_sizes[1]);
+        $x_offset = (int)($y_offset === 0 ? GlobalConfig::UI_OFFSET + GlobalConfig::INFO_PANEL_CENTER_OFFSET / 2 - $text_sizes[0] / 2 : GlobalConfig::UI_OFFSET + GlobalConfig::TEXT_MARGIN);
+        $this->fill_rect(
+            $x_offset,
+            GlobalConfig::TEXT_MARGIN * $y_offset + $text_sizes[1],
+            $text_sizes[0],
+            $text_sizes[1]
+        );
         $this->sdl->freeSurface($text_surface);
         if (!$this->draw->copy($text_texture, null, \FFI::addr($this->rect))) {
             throw new \RuntimeException($this->sdl->getError());

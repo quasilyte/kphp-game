@@ -13,13 +13,16 @@ class World {
 
     public Player $player;
 
+    public int $stage;
+
     public int $portal_pos = 0;
 
     /** @var Enemy[] */
     public $enemies;
 
-    public function __construct() {
-        $this->player = new Player();
+    public function __construct(Player $player, int $stage) {
+        $this->player = $player;
+        $this->stage  = $stage;
     }
 
     public function hasTileAt(int $row, int $col): bool {
@@ -68,5 +71,9 @@ class World {
             }
         }
         return true;
+    }
+
+    public function tileIsPortal(): bool {
+        return false;
     }
 }
