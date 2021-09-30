@@ -27,3 +27,4 @@ $ make game
 Tested on:
 
 * Ubuntu
+* Mac OS
