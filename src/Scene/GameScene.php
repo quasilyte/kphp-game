@@ -9,6 +9,7 @@ use KPHPGame\Scene\GameScene\Direction;
 use KPHPGame\Scene\GameScene\Enemy;
 use KPHPGame\Scene\GameScene\InfoPanel\Events\AttackWorldEvent;
 use KPHPGame\Scene\GameScene\InfoPanel\Events\DieWorldEvent;
+use KPHPGame\Scene\GameScene\InfoPanel\Events\LevelUpWorldEvent;
 use KPHPGame\Scene\GameScene\InfoPanel\StatusRenderer;
 use KPHPGame\Scene\GameScene\InfoPanel\WorldEventLogRenderer;
 use KPHPGame\Scene\GameScene\MapTile;
@@ -33,7 +34,7 @@ class GameScene {
     /** @var ffi_cdata<sdl, struct SDL_Window*> */
     private $sdl_window;
     private SDL $sdl;
-    private WorldEventLogRenderer $world_event_logger;
+    private WorldEventLogRenderer $world_event_log_renderer;
     private StatusRenderer $status_renderer;
     /** $var ffi_cdata<sdl_ttf, struct TTF_Font*> */
     private $font;
@@ -71,8 +72,8 @@ class GameScene {
 
         Logger::info('generating world');
         $this->initWorld();
-        $this->world_event_logger = new WorldEventLogRenderer($this->sdl, $this->sdl_renderer, $draw, $this->font);
-        $this->status_renderer    = new StatusRenderer($this->sdl, $this->sdl_renderer, $draw, $this->font);
+        $this->world_event_log_renderer = new WorldEventLogRenderer($this->sdl, $this->sdl_renderer, $draw, $this->font);
+        $this->status_renderer          = new StatusRenderer($this->sdl, $this->sdl_renderer, $draw, $this->font);
 
         Logger::info('rendering world');
 
@@ -245,14 +246,16 @@ class GameScene {
 
     private function attackPlayer(Enemy $attacker) {
         $damage_roll = rand($attacker->min_damage, $attacker->max_damage);
-        $this->world_event_logger->add_event(AttackWorldEvent::create($attacker, $this->world->player, $damage_roll));
+        $this->world_event_log_renderer->add_event(AttackWorldEvent::create($attacker, $this->world->player, $damage_roll));
         $this->world->player->hp -= $damage_roll;
         $this->onPlayerDamageTaken();
     }
 
     private function onPlayerDamageTaken() {
+        $this->world->player->lvlUp();
+        $this->world_event_log_renderer->add_event(LevelUpWorldEvent::create($this->world->player));
         if ($this->world->player->hp <= 0) {
-            $this->world_event_logger->add_event(DieWorldEvent::create($this->world->player));
+            $this->world_event_log_renderer->add_event(DieWorldEvent::create($this->world->player));
             $this->onDefeat();
         }
     }
@@ -310,7 +313,7 @@ class GameScene {
         $this->renderPortal();
         $this->renderPlayer($draw);
         $this->renderEnemies($draw);
-        $this->world_event_logger->render();
+        $this->world_event_log_renderer->render();
         $this->status_renderer->render($this->world->player);
         if ($this->defeat) {
             $this->renderRestartMenu();
@@ -407,9 +410,10 @@ class GameScene {
 
     private function renderRestartMenu() {
         $text_color = new Color(255, 30, 30);
+        $back_color = new Color(0, 0, 0);
 
         $end_game         = "Game Over";
-        $end_game_surface = $this->sdl->renderUTF8Blended($this->font, $end_game, $text_color);
+        $end_game_surface = $this->sdl->renderUTF8Shaded($this->font, $end_game, $text_color, $back_color);
         $end_game_sizes   = $this->sdl->sizeUTF8($this->font, $end_game);
         $end_game_texture = $this->sdl->createTextureFromSurface($this->sdl_renderer, $end_game_surface);
 
@@ -424,7 +428,7 @@ class GameScene {
         $this->sdl->destroyTexture($end_game_texture);
 
         $restart         = "Restart? [y/n]";
-        $restart_surface = $this->sdl->renderUTF8Blended($this->font, $restart, $text_color);
+        $restart_surface = $this->sdl->renderUTF8Shaded($this->font, $restart, $text_color, $back_color);
         $restart_sizes   = $this->sdl->sizeUTF8($this->font, $restart);
         $restart_texture = $this->sdl->createTextureFromSurface($this->sdl_renderer, $restart_surface);
         $end_game_rect->x = (int)(GlobalConfig::WINDOW_WIDTH / 2 - $restart_sizes[0] / 2);
