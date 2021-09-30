@@ -10,11 +10,13 @@ use KPHPGame\Scene\GameScene\Enemy;
 use KPHPGame\Scene\GameScene\InfoPanel\Events\AttackWorldEvent;
 use KPHPGame\Scene\GameScene\InfoPanel\Events\DieWorldEvent;
 use KPHPGame\Scene\GameScene\InfoPanel\Events\LevelUpWorldEvent;
+use KPHPGame\Scene\GameScene\InfoPanel\Events\SpellCastWorldEvent;
 use KPHPGame\Scene\GameScene\InfoPanel\StatusRenderer;
 use KPHPGame\Scene\GameScene\InfoPanel\WorldEventLogRenderer;
 use KPHPGame\Scene\GameScene\MapTile;
 use KPHPGame\Scene\GameScene\PlayerAction;
 use KPHPGame\Scene\GameScene\AlertWindowRenderer;
+use KPHPGame\Scene\GameScene\Spell;
 use KPHPGame\Scene\GameScene\Unit;
 use KPHPGame\Scene\GameScene\World;
 use KPHPGame\Scene\GameScene\WorldGenerator;
@@ -194,6 +196,24 @@ class GameScene {
 
         $player = $this->world->player;
         $tile   = $this->world->getPlayerTile();
+
+        /** @var Spell $spell */
+        $spell = null;
+        if ($this->player_action === PlayerAction::MAGIC_FIREBALL) {
+            $spell = $player->spellbook->fireball;
+        } else if ($this->player_action === PlayerAction::MAGIC_TORNADO) {
+            $spell = $player->spellbook->tornado;
+        } else if ($this->player_action === PlayerAction::MAGIC_THUNDER) {
+            $spell = $player->spellbook->thunder;
+        }
+        if ($spell !== null) {
+            if ($player->mp < $spell->mp_cost) {
+                return false; // Not enough mana
+            }
+            $player->mp -= $spell->mp_cost;
+            $this->world_event_log_renderer->add_event(SpellCastWorldEvent::create($spell));
+            return true;
+        }
 
         $dir = Direction::NONE;
         if ($this->player_action === PlayerAction::MOVE_UP) {

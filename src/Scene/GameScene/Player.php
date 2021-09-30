@@ -7,6 +7,7 @@ class Player extends Unit {
     public int $max_mp;
     public int $exp;
     public int $next_level_exp;
+    public SpellBook $spellbook;
 
     public function __construct() {
         $this->hp             = 50;
@@ -17,6 +18,8 @@ class Player extends Unit {
         $this->exp            = 0;
         $this->level          = 1;
         $this->next_level_exp = (1 << $this->level + 2);
+
+        $this->spellbook = new SpellBook();
     }
 
     public function lvlUp() {
