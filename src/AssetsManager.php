@@ -9,4 +9,8 @@ class AssetsManager {
     public static function tile(string $name): string {
         return __DIR__ . "/../assets/tiles/$name";
     }
+
+    public static function font(string $name): string {
+        return __DIR__ . "/../assets/fonts/$name.ttf";
+    }
 }

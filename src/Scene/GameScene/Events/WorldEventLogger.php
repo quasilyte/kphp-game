@@ -1,0 +1,80 @@
+<?php
+
+namespace KPHPGame\Scene\GameScene\Events;
+
+// Contains the events log scene state.
+// Moves, attacks and etc
+use KPHPGame\Logger;
+use KPHPGame\Person;
+use Quasilyte\SDLite\Color;
+use Quasilyte\SDLite\Renderer;
+use Quasilyte\SDLite\SDL;
+
+class WorldEventLogger {
+    /**
+     * @var string[]
+     */
+    private array $events;
+
+    private SDL $sdl;
+    private Renderer $draw;
+
+    /** @var ffi_cdata<sdl, struct SDL_Renderer*> */
+    private $renderer;
+    /** @var ffi_cdata<sdl_ttf, struct TTF_Font*> */
+    private $font;
+    private $text_color;
+
+    /**
+     * //     * @param ffi_cdata<sdl, struct SDL_Renderer*> $renderer
+     * @param ffi_cdata<sdl_ttf, struct TTF_Font*> $font
+     */
+    public function __construct(SDL $sdl, Renderer $draw, $font) {
+//        $this->renderer   = $renderer;
+        $this->sdl        = $sdl;
+        $this->draw       = $draw;
+        $this->font       = $font;
+        $this->text_color = new Color(255, 255, 255);
+    }
+
+    public function add_event(WorldEvent $event) {
+        $event_str = '' . $event;
+        Logger::info('Add event: ' . $event_str);
+
+        array_push($this->events, $event_str);
+        if (count($this->events) > 5) {
+            array_pop($this->events);
+        }
+    }
+
+    /**
+     * @return WorldEvent[]
+     */
+    public static function gen_test_data() {
+        $player  = Person::create("player1");
+        $monster = Person::create("monster1");
+        return [
+            MoveWorldEvent::create($player, "up"),
+            MoveWorldEvent::create($monster, "down"),
+            AttackWorldEvent::create($player, $monster, 5),
+            AttackWorldEvent::create($player, $monster, 10),
+            DieWorldEvent::create($monster),
+        ];
+    }
+
+    public function render() {
+        Logger::info('EventLogger::render');
+        $text = implode('\n', $this->events);
+
+        $msg_surf  = $this->sdl->renderTextBlended($this->font, $text, $this->text_color);
+        $msg_sizes = $this->sdl->sizeUTF8($this->font, $text);
+
+        $msg_rect    = $this->sdl->newRect();
+        $msg_rect->x = 100;
+        $msg_rect->y = 100;
+        $msg_rect->w = $msg_sizes[0]; // controls the width of the rect
+        $msg_rect->h = $msg_sizes[1]; // controls the height of the rect
+        $msg_text = $this->sdl->createTextureFromSurface($this->renderer, $msg_surf);
+        $this->draw->copy($msg_text, null, \FFI::addr($msg_rect));
+    }
+}
