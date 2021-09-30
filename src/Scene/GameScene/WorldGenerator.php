@@ -52,7 +52,6 @@ class WorldGenerator {
                 $tile->kind = MapTile::WALL;
                 $wall_len--;
                 while ($wall_len > 0) {
-                    var_dump("hehe");
                     [$row, $col] = $world->calculateStep($tile, $dir);
                     if (!$world->hasTileAt($row, $col)) {
                         break;
