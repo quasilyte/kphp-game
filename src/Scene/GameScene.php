@@ -2,6 +2,7 @@
 
 namespace KPHPGame\Scene;
 
+use KPHPGame\AssetsManager;
 use KPHPGame\GlobalConfig;
 use KPHPGame\Logger;
 use KPHPGame\Scene\GameScene\World;
@@ -25,12 +26,17 @@ class GameScene {
       GlobalConfig::WINDOW_WIDTH,
       GlobalConfig::WINDOW_HEIGHT);
 
-    $this->sdl_renderer = $this->sdl->createRenderer($this->sdl_window, -1);
+    $this->sdl_renderer = $this->sdl->createRenderer($this->sdl_window);
     $draw = new Renderer($this->sdl, $this->sdl_renderer);
 
+    Logger::info('generating world');
     $this->world = WorldGenerator::generate();
 
-    Logger::info("starting GameScene event loop");
+    Logger::info('rendering world');
+    $world_renderer = $this->sdl->createRenderer($this->sdl_window);
+    $this->renderWorld($world_renderer);
+
+    Logger::info('starting GameScene event loop');
 
     $event = $this->sdl->newEvent();
     while (true) {
@@ -61,6 +67,13 @@ class GameScene {
     }
   }
 
+  /** @param ffi_cdata<sdl, struct SDL_Renderer*> $renderer */
+  private function renderWorld($renderer): void {
+    // TODO.
+    $surface = $this->sdl->imgLoad(AssetsManager::tile("summer.png"));
+    $texture = $this->sdl->createTextureFromSurface($renderer, $surface);
+    $this->sdl->freeSurface($surface);
+  }
 
   /** @var SDL */
   private $sdl;
