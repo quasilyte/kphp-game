@@ -34,6 +34,8 @@ class GameScene {
     private $sdl_renderer;
     private Renderer $draw;
     private World $world;
+    /** @var Enemy[] */
+    private $dead_enemies;
     private $player_action = PlayerAction::NONE;
     /** @var ffi_cdata<sdl, struct SDL_Window*> */
     private $sdl_window;
@@ -123,6 +125,7 @@ class GameScene {
         }
         $this->world = new World($player, $stage);
         WorldGenerator::generate($this->world);
+        $this->dead_enemies = [];
         $this->defeat = false;
         $this->onPlayerMoved();
     }
@@ -203,9 +206,14 @@ class GameScene {
     }
 
     private function castThunder(): void {
+        $world = $this->world;
+        $player_tile = $world->getPlayerTile();
         foreach ($this->world->enemies as $enemy) {
-            
-
+            $enemy_tile = $world->tiles[$enemy->pos];
+            if (abs($enemy_tile->col - $player_tile->col) <= 1 && abs($enemy_tile->row - $player_tile->row) <= 1) {
+                $damage_roll = $this->world->player->rollSpellDamage($this->world->player->spellbook->thunder);
+                $this->attackEnemy($enemy, $damage_roll);
+            }
         }
     }
 
@@ -296,6 +304,29 @@ class GameScene {
         }
     }
 
+    private function attackEnemy(Enemy $target, int $damage) {
+        $this->world_event_log_renderer->add_event(AttackWorldEvent::create($this->world->player, $target, $damage));
+        $target->hp -= $damage;
+        $this->onEnemyDamageTaken($target);
+    }
+
+    private function onEnemyDamageTaken(Enemy $target) {
+        if ($target->hp <= 0) {
+            $this->dead_enemies[] = $target;
+
+            // Remove $target from the world->enemies vector.
+            // Use a copying loop in hope that we can preserve world->enemies "vector" property.
+            /** @var Enemy[] $alive_enemies */
+            $alive_enemies = [];
+            foreach ($this->world->enemies as $other) {
+                if ($other !== $target) {
+                    $alive_enemies[] = $other;
+                }
+            }
+            $this->world->enemies = $alive_enemies;
+        }
+    }
+
     private function attackPlayer(Enemy $attacker) {
         $damage_roll = rand($attacker->min_damage, $attacker->max_damage);
         $this->world_event_log_renderer->add_event(AttackWorldEvent::create($attacker, $this->world->player, $damage_roll));
@@ -364,8 +395,8 @@ class GameScene {
         $draw->clear();
         $this->renderTiles($draw);
         $this->renderPortal();
-        $this->renderPlayer($draw);
         $this->renderEnemies($draw);
+        $this->renderPlayer($draw);
         $this->world_event_log_renderer->render();
         $this->status_renderer->render($this->world->player, $this->world->stage);
         if ($this->defeat) {
@@ -448,6 +479,12 @@ class GameScene {
     }
 
     private function renderEnemies(Renderer $draw) {
+        foreach ($this->dead_enemies as $unit) {
+            if ($this->world->tiles[$unit->pos]->revealed) {
+                $this->renderUnit($draw, $unit);
+            }
+        }
+
         foreach ($this->world->enemies as $unit) {
             if ($this->world->tiles[$unit->pos]->revealed) {
                 $this->renderUnit($draw, $unit);

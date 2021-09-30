@@ -22,6 +22,11 @@ class Player extends Unit {
         $this->spellbook = new SpellBook();
     }
 
+    public function rollSpellDamage(Spell $spell): int {
+        // TODO: take the player stats/level into the account here?
+        return rand($spell->min_damage, $spell->max_damage);
+    }
+
     public function lvlUp() {
         $this->level  += 1;
         $this->max_hp += 10;
