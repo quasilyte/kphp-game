@@ -3,7 +3,6 @@
 namespace KPHPGame\Scene\GameScene;
 
 use KPHPGame\GlobalConfig;
-use KPHPGame\Scene\GameScene;
 
 class WorldGenerator {
     public static function generate(World $world): void {
@@ -12,7 +11,7 @@ class WorldGenerator {
 
         for ($i = 0; $i < $num_rows; $i++) {
             for ($j = 0; $j < $num_cols; $j++) {
-                $pos       = $i * $num_cols+$j;
+                $pos       = $i * $num_cols + $j;
                 $tile      = new MapTile();
                 $tile->pos = $pos;
                 $tile->row = $i;
@@ -20,7 +19,7 @@ class WorldGenerator {
 
                 $tile->tileset_index = rand(0, 3);
 
-                if ($i === 0 || $j === 0 || $i === $num_rows-1 || $j === $num_cols-1) {
+                if ($i === 0 || $j === 0 || $i === $num_rows - 1 || $j === $num_cols - 1) {
                     $tile->kind = MapTile::WALL;
                 } else {
                     $tile->kind = MapTile::EMPTY;

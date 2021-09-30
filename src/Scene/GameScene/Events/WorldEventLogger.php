@@ -4,6 +4,7 @@ namespace KPHPGame\Scene\GameScene\Events;
 
 // Contains the events log scene state.
 // Moves, attacks and etc
+use FFI;
 use KPHPGame\GlobalConfig;
 use KPHPGame\Logger;
 use KPHPGame\Person;
@@ -31,21 +32,10 @@ class WorldEventLogger {
      * @param ffi_cdata<sdl_ttf, struct TTF_Font*> $font
      */
     public function __construct(SDL $sdl, Renderer $draw, $font) {
-//        $this->renderer   = $renderer;
         $this->sdl        = $sdl;
         $this->draw       = $draw;
         $this->font       = $font;
         $this->text_color = new Color(255, 255, 255);
-    }
-
-    public function add_event(WorldEvent $event) {
-        $event_str = '' . $event;
-        Logger::info('Add event: ' . $event_str);
-
-        array_push($this->events, $event_str);
-        if (count($this->events) > 5) {
-            array_pop($this->events);
-        }
     }
 
     /**
@@ -63,6 +53,16 @@ class WorldEventLogger {
         ];
     }
 
+    public function add_event(WorldEvent $event) {
+        $event_str = '' . $event;
+        Logger::info('Add event: ' . $event_str);
+
+        array_push($this->events, $event_str);
+        if (count($this->events) > 5) {
+            array_pop($this->events);
+        }
+    }
+
     public function render() {
         $text = implode('\n', $this->events);
 
@@ -74,7 +74,7 @@ class WorldEventLogger {
         $msg_rect->y = GlobalConfig::WINDOW_HEIGHT - 512;
         $msg_rect->w = $msg_sizes[0]; // controls the width of the rect
         $msg_rect->h = $msg_sizes[1]; // controls the height of the rect
-        $msg_text = $this->sdl->createTextureFromSurface($this->renderer, $msg_surf);
-        $this->draw->copy($msg_text, null, \FFI::addr($msg_rect));
+        $msg_text    = $this->sdl->createTextureFromSurface($this->renderer, $msg_surf);
+        $this->draw->copy($msg_text, null, FFI::addr($msg_rect));
     }
 }

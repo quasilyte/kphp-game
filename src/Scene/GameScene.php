@@ -2,6 +2,7 @@
 
 namespace KPHPGame\Scene;
 
+use FFI;
 use KPHPGame\AssetsManager;
 use KPHPGame\GlobalConfig;
 use KPHPGame\Logger;
@@ -14,9 +15,26 @@ use Quasilyte\SDLite\EventType;
 use Quasilyte\SDLite\Renderer;
 use Quasilyte\SDLite\Scancode;
 use Quasilyte\SDLite\SDL;
+use RuntimeException;
 
 // GameScene is a main gameplay scene.
 class GameScene {
+    /** @var ffi_cdata<sdl, struct SDL_Renderer*> */
+    private $sdl_renderer;
+    private World $world;
+    private $player_action = PlayerAction::NONE;
+    /** @var ffi_cdata<sdl, struct SDL_Window*> */
+    private $sdl_window;
+    private SDL $sdl;
+    private WorldEventLogger $world_event_logger;
+    /** $var ffi_cdata<sdl_ttf, struct TTF_Font*> */
+    private $font;
+    /** @var ffi_cdata<sdl, struct SDL_Texture*> */
+    private $tileset_texture;
+    /** @var ffi_cdata<sdl, struct SDL_Texture*> */
+    private $player_texture;
+    private bool $escape = false;
+
     public function __construct(SDL $sdl) {
         $this->sdl  = $sdl;
         $this->font = $sdl->openFont(AssetsManager::font('arbor'), GlobalConfig::FONT_SIZE);
@@ -31,8 +49,8 @@ class GameScene {
             GlobalConfig::WINDOW_HEIGHT);
 
         $this->sdl_renderer = $this->sdl->createRenderer($this->sdl_window);
-        if (\FFI::isNull($this->sdl_renderer)) {
-            throw new \RuntimeException($this->sdl->getError());
+        if (FFI::isNull($this->sdl_renderer)) {
+            throw new RuntimeException($this->sdl->getError());
         }
         $draw = new Renderer($this->sdl, $this->sdl_renderer);
 
@@ -53,7 +71,6 @@ class GameScene {
 
         $event = $this->sdl->newEvent();
         while (true) {
-
             $this->processEvents($event);
             if ($this->escape) {
                 break;
@@ -72,6 +89,28 @@ class GameScene {
         }
 
         // TODO: SDL_DestroyWindow
+    }
+
+    private function loadTextures(Renderer $draw): void {
+        $surface = $this->sdl->imgLoad(AssetsManager::tile("wasteland_compact.png"));
+        if (FFI::isNull($surface)) {
+            throw new RuntimeException($this->sdl->getError());
+        }
+        $this->tileset_texture = $this->sdl->createTextureFromSurface($this->sdl_renderer, $surface);
+        if (FFI::isNull($this->tileset_texture)) {
+            throw new RuntimeException($this->sdl->getError());
+        }
+        $this->sdl->freeSurface($surface);
+
+        $surface = $this->sdl->imgLoad(AssetsManager::unit("mage.png"));
+        if (FFI::isNull($surface)) {
+            throw new RuntimeException($this->sdl->getError());
+        }
+        $this->player_texture = $this->sdl->createTextureFromSurface($this->sdl_renderer, $surface);
+        if (FFI::isNull($this->player_texture)) {
+            throw new RuntimeException($this->sdl->getError());
+        }
+        $this->sdl->freeSurface($surface);
     }
 
     /** @param ffi_cdata<sdl, struct SDL_Event> $event */
@@ -112,44 +151,10 @@ class GameScene {
             $delta_col = +1;
         }
         if ($delta_col !== 0 || $delta_row !== 0) {
-            if ($this->world->getTile($tile->row+$delta_row, $tile->col+$delta_col)->kind !== MapTile::WALL) {
-                $player->pos = $this->world->getTile($tile->row+$delta_row, $tile->col+$delta_col)->pos;
+            if ($this->world->getTile($tile->row + $delta_row, $tile->col + $delta_col)->kind !== MapTile::WALL) {
+                $player->pos = $this->world->getTile($tile->row + $delta_row, $tile->col + $delta_col)->pos;
             }
             return;
-        }
-    }
-
-    private function loadTextures(Renderer $draw): void {
-        $surface = $this->sdl->imgLoad(AssetsManager::tile("wasteland_compact.png"));
-        if (\FFI::isNull($surface)) {
-            throw new \RuntimeException($this->sdl->getError());
-        }
-        $this->tileset_texture = $this->sdl->createTextureFromSurface($this->sdl_renderer, $surface);
-        if (\FFI::isNull($this->tileset_texture)) {
-            throw new \RuntimeException($this->sdl->getError());
-        }
-        $this->sdl->freeSurface($surface);
-
-        $surface = $this->sdl->imgLoad(AssetsManager::unit("mage.png"));
-        if (\FFI::isNull($surface)) {
-            throw new \RuntimeException($this->sdl->getError());
-        }
-        $this->player_texture = $this->sdl->createTextureFromSurface($this->sdl_renderer, $surface);
-        if (\FFI::isNull($this->player_texture)) {
-            throw new \RuntimeException($this->sdl->getError());
-        }
-        $this->sdl->freeSurface($surface);
-    }
-
-    private function renderPlayer(Renderer $draw): void {
-        $rect    = $this->sdl->newRect();
-        $rect->w = 32;
-        $rect->h = 32;
-        $tile    = $this->world->getPlayerTile();
-        $rect->x = $tile->col * 32;
-        $rect->y = $tile->row * 32;
-        if (!$draw->copy($this->player_texture, null, \FFI::addr($rect))) {
-            throw new \RuntimeException($this->sdl->getError());
         }
     }
 
@@ -172,31 +177,21 @@ class GameScene {
             }
             $tile_pos->x = $tile->col * $tile_rect->w;
             $tile_pos->y = $tile->row * $tile_rect->h;
-            if (!$draw->copy($this->tileset_texture, \FFI::addr($tile_rect), \FFI::addr($tile_pos))) {
-                throw new \RuntimeException($this->sdl->getError());
+            if (!$draw->copy($this->tileset_texture, FFI::addr($tile_rect), FFI::addr($tile_pos))) {
+                throw new RuntimeException($this->sdl->getError());
             }
         }
     }
 
-    /** @var ffi_cdata<sdl, struct SDL_Renderer*> */
-    private $sdl_renderer;
-
-    private World $world;
-    private $player_action = PlayerAction::NONE;
-
-    /** @var ffi_cdata<sdl, struct SDL_Window*> */
-    private $sdl_window;
-
-    private SDL $sdl;
-
-    private WorldEventLogger $world_event_logger;
-
-    /** $var ffi_cdata<sdl_ttf, struct TTF_Font*> */
-    private $font;
-    /** @var ffi_cdata<sdl, struct SDL_Texture*> */
-    private $tileset_texture;
-    /** @var ffi_cdata<sdl, struct SDL_Texture*> */
-    private $player_texture;
-
-    private bool $escape = false;
+    private function renderPlayer(Renderer $draw): void {
+        $rect    = $this->sdl->newRect();
+        $rect->w = 32;
+        $rect->h = 32;
+        $tile    = $this->world->getPlayerTile();
+        $rect->x = $tile->col * 32;
+        $rect->y = $tile->row * 32;
+        if (!$draw->copy($this->player_texture, null, FFI::addr($rect))) {
+            throw new RuntimeException($this->sdl->getError());
+        }
+    }
 }
