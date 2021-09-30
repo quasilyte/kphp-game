@@ -329,6 +329,7 @@ class GameScene {
     private function onEnemyDamageTaken(Enemy $target) {
         if ($target->hp <= 0) {
             $this->dead_enemies[] = $target;
+            $this->info_panel_renderer->add_event(DieWorldEvent::create($target));
 
             // Remove $target from the world->enemies vector.
             // Use a copying loop in hope that we can preserve world->enemies "vector" property.
