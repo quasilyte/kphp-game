@@ -4,7 +4,6 @@ namespace KPHPGame\Scene\GameScene\Events;
 
 // Contains the events log scene state.
 // Moves, attacks and etc
-use FFI;
 use KPHPGame\GlobalConfig;
 use KPHPGame\Logger;
 use KPHPGame\Person;
@@ -68,14 +67,23 @@ class WorldEventLogger {
         $text = implode('\n', $this->events);
 
         $msg_surf  = $this->sdl->renderTextBlended($this->font, $text, $this->text_color);
+        if (\FFI::isNull($msg_surf)) {
+            throw new \RuntimeException($this->sdl->getError());
+        }
         $msg_sizes = $this->sdl->sizeUTF8($this->font, $text);
 
         $msg_rect    = $this->sdl->newRect();
-        $msg_rect->x = GlobalConfig::WINDOW_WIDTH - 1024;
+        $msg_rect->x = GlobalConfig::UI_OFFSET;
         $msg_rect->y = GlobalConfig::WINDOW_HEIGHT - 512;
         $msg_rect->w = $msg_sizes[0]; // controls the width of the rect
         $msg_rect->h = $msg_sizes[1]; // controls the height of the rect
         $msg_text    = $this->sdl->createTextureFromSurface($this->renderer, $msg_surf);
-        $this->draw->copy($msg_text, null, FFI::addr($msg_rect));
+        if (\FFI::isNull($msg_text)) {
+            throw new \RuntimeException($this->sdl->getError());
+        }
+        $this->sdl->freeSurface($msg_surf);
+        if (!$this->draw->copy($msg_text, null, \FFI::addr($msg_rect))) {
+            throw new \RuntimeException($this->sdl->getError());
+        }
     }
 }
