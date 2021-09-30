@@ -4,12 +4,46 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f2b5c6040557553004287dae5d480da8",
-    "packages": [],
+    "content-hash": "03c2664018eb930436c688d619f7349d",
+    "packages": [
+        {
+            "name": "quasilyte/kphp-sdlite",
+            "version": "dev-master",
+            "dist": {
+                "type": "path",
+                "url": "./packages/kphp-sdlite",
+                "reference": "5feaf9ef436add7ffedfe1421f7cce2b96463bc6"
+            },
+            "require": {
+                "php": ">=7.4"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Quasilyte\\SDLite\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Iskander Sharipov",
+                    "email": "quasilyte@gmail.com"
+                }
+            ],
+            "description": "Simple SDL framework for KPHP",
+            "transport-options": {
+                "relative": true
+            }
+        }
+    ],
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "quasilyte/kphp-sdlite": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

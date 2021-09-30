@@ -1,4 +1,11 @@
-.PHONY: game
+.PHONY: game update-sdlite
+
+update-sdlite:
+	mkdir -p packages
+	rm -rf packages/kphp-sdlite
+	git clone https://github.com/quasilyte/kphp-sdlite.git packages/kphp-sdlite
+	rm composer.lock
+	composer install
 
 game:
 	composer install

@@ -9,7 +9,7 @@ function main() {
     $game = new Game();
     $game->run();
   } catch (Exception $e) {
-    echo "{$e->getFile()}:{$e->getLine()}: {$e->getMessage()}\n";
+    echo "UNHANDLED EXCEPTION: {$e->getFile()}:{$e->getLine()}: {$e->getMessage()}\n";
   }
 }
 
