@@ -57,6 +57,8 @@ class GameScene {
     /** @var ffi_cdata<sdl, struct SDL_Texture*> */
     private $goblin_texture;
     /** @var ffi_cdata<sdl, struct SDL_Texture*> */
+    private $ogre_texture;
+    /** @var ffi_cdata<sdl, struct SDL_Texture*> */
     private $thunder_effect_texture;
     private bool $escape = false;
     private bool $defeat = false;
@@ -153,6 +155,7 @@ class GameScene {
         $this->player_texture = $this->loadOneTexture(AssetsManager::unit("Player.png"));
         $this->orc_texture = $this->loadOneTexture(AssetsManager::unit("Orc.png"));
         $this->goblin_texture = $this->loadOneTexture(AssetsManager::unit("Goblin.png"));
+        $this->ogre_texture = $this->loadOneTexture(AssetsManager::unit("Ogre.png"));
         $this->thunder_effect_texture = $this->loadOneTexture(AssetsManager::magic("thunder_effect.png"));
     }
 
@@ -527,24 +530,40 @@ class GameScene {
         $tile_rect    = $this->sdl->newRect();
         $tile_rect->w = GlobalConfig::TILE_WIDTH;
         $tile_rect->h = 48;
-        if ($unit->hp > 0) {
-            $tile_rect->x = 32 * $unit->direction;
-        } else {
-            $tile_rect->x = 32 * 4;
-        }
 
         $tile          = $this->world->tiles[$unit->pos];
         $render_pos    = $this->sdl->newRect();
-        $render_pos->w = 32;
         $render_pos->h = 48;
-        $render_pos->x = $tile->col * 32;
         $render_pos->y = ($tile->row * 32) - 16;
+
+        $is_big = false;
 
         $texture = $this->player_texture;
         if ($unit->name === 'Orc') {
             $texture = $this->orc_texture;
         } else if ($unit->name === 'Goblin') {
             $texture = $this->goblin_texture;
+        } else if ($unit->name === 'Ogre') {
+            $texture = $this->ogre_texture;
+            $is_big = true;
+        }
+
+        $width = GlobalConfig::TILE_WIDTH;
+        if ($is_big) {
+            $width += 10;
+        }
+        if ($is_big) {
+            $render_pos->x = ($tile->col * 32) - 10;
+            $tile_rect->w = $width;
+            $render_pos->w = $width;
+        } else {
+            $render_pos->x = $tile->col * 32;
+            $render_pos->w = 32;
+        }
+        if ($unit->hp > 0) {
+            $tile_rect->x = $width * $unit->direction;
+        } else {
+            $tile_rect->x = $width * 4;
         }
 
         if (!$this->draw->copy($texture, \FFI::addr($tile_rect), \FFI::addr($render_pos))) {
