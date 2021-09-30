@@ -5,6 +5,7 @@ namespace KPHPGame\Scene;
 use KPHPGame\AssetsManager;
 use KPHPGame\GlobalConfig;
 use KPHPGame\Logger;
+use KPHPGame\Scene\GameScene\AnimatedTile;
 use KPHPGame\Scene\GameScene\Colors;
 use KPHPGame\Scene\GameScene\Direction;
 use KPHPGame\Scene\GameScene\Enemy;
@@ -54,9 +55,13 @@ class GameScene {
     private $player_texture;
     /** @var ffi_cdata<sdl, struct SDL_Texture*> */
     private $orc_texture;
+    /** @var ffi_cdata<sdl, struct SDL_Texture*> */
+    private $thunder_effect_texture;
     private bool $escape = false;
     private bool $defeat = false;
     private int $turn_num = 0;
+    /** @var AnimatedTile[] */
+    private $animations;
 
     public function __construct(SDL $sdl) {
         $this->sdl  = $sdl;
@@ -102,6 +107,8 @@ class GameScene {
             if ($this->processPlayerAction()) {
                 $this->onNewTurn();
                 $this->renderAll($draw);
+            } else if (count($this->animations) !== 0) {
+                $this->renderAll($draw);
             }
 
             if ($this->world->tileIsPortal()) {
@@ -126,50 +133,31 @@ class GameScene {
         $this->world = new World($player, $stage);
         WorldGenerator::generate($this->world);
         $this->dead_enemies = [];
+        $this->animations = [];
         $this->defeat = false;
         $this->onPlayerMoved();
     }
 
+    /** @return ffi_cdata<sdl, struct SDL_Texture*>  */
+    private function loadOneTexture(string $asset_path) {
+        $surface = $this->sdl->imgLoad($asset_path);
+        if (\FFI::isNull($surface)) {
+            throw new RuntimeException($this->sdl->getError());
+        }
+        $texture = $this->sdl->createTextureFromSurface($this->sdl_renderer, $surface);
+        if (\FFI::isNull($texture)) {
+            throw new RuntimeException($this->sdl->getError());
+        }
+        $this->sdl->freeSurface($surface);
+        return $texture;
+    }
+
     private function loadTextures(): void {
-        $surface = $this->sdl->imgLoad(AssetsManager::tile("wasteland_compact.png"));
-        if (\FFI::isNull($surface)) {
-            throw new RuntimeException($this->sdl->getError());
-        }
-        $this->tileset_texture = $this->sdl->createTextureFromSurface($this->sdl_renderer, $surface);
-        if (\FFI::isNull($this->tileset_texture)) {
-            throw new RuntimeException($this->sdl->getError());
-        }
-        $this->sdl->freeSurface($surface);
-
-        $surface = $this->sdl->imgLoad(AssetsManager::unit("Player.png"));
-        if (\FFI::isNull($surface)) {
-            throw new RuntimeException($this->sdl->getError());
-        }
-        $this->player_texture = $this->sdl->createTextureFromSurface($this->sdl_renderer, $surface);
-        if (\FFI::isNull($this->player_texture)) {
-            throw new RuntimeException($this->sdl->getError());
-        }
-        $this->sdl->freeSurface($surface);
-
-        $surface = $this->sdl->imgLoad(AssetsManager::unit("Orc.png"));
-        if (\FFI::isNull($surface)) {
-            throw new RuntimeException($this->sdl->getError());
-        }
-        $this->orc_texture = $this->sdl->createTextureFromSurface($this->sdl_renderer, $surface);
-        if (\FFI::isNull($this->player_texture)) {
-            throw new RuntimeException($this->sdl->getError());
-        }
-        $this->sdl->freeSurface($surface);
-
-        $surface = $this->sdl->imgLoad(AssetsManager::tile("portal.png"));
-        if (\FFI::isNull($surface)) {
-            throw new RuntimeException($this->sdl->getError());
-        }
-        $this->portal_texture = $this->sdl->createTextureFromSurface($this->sdl_renderer, $surface);
-        if (\FFI::isNull($this->player_texture)) {
-            throw new RuntimeException($this->sdl->getError());
-        }
-        $this->sdl->freeSurface($surface);
+        $this->tileset_texture = $this->loadOneTexture(AssetsManager::tile("wasteland_compact.png"));
+        $this->portal_texture = $this->loadOneTexture(AssetsManager::tile("portal.png"));
+        $this->player_texture = $this->loadOneTexture(AssetsManager::unit("Player.png"));
+        $this->orc_texture = $this->loadOneTexture(AssetsManager::unit("Orc.png"));
+        $this->thunder_effect_texture = $this->loadOneTexture(AssetsManager::magic("thunder_effect.png"));
     }
 
     /** @param ffi_cdata<sdl, struct SDL_Event> $event */
@@ -208,11 +196,24 @@ class GameScene {
     private function castThunder(): void {
         $world = $this->world;
         $player_tile = $world->getPlayerTile();
-        foreach ($this->world->enemies as $enemy) {
+        foreach ($world->enemies as $enemy) {
             $enemy_tile = $world->tiles[$enemy->pos];
             if (abs($enemy_tile->col - $player_tile->col) <= 1 && abs($enemy_tile->row - $player_tile->row) <= 1) {
-                $damage_roll = $this->world->player->rollSpellDamage($this->world->player->spellbook->thunder);
+                $damage_roll = $world->player->rollSpellDamage($world->player->spellbook->thunder);
                 $this->attackEnemy($enemy, $damage_roll);
+            }
+        }
+        for ($delta_row = -1; $delta_row <= 1; $delta_row++) {
+            for ($delta_col = -1; $delta_col <= 1; $delta_col++) {
+                if ($delta_col === 0 && $delta_row === 0) {
+                    continue;
+                }
+                $a = new AnimatedTile();
+                $a->frames = 5;
+                $a->ticks_per_frame = 5;
+                $a->texture = $this->thunder_effect_texture;
+                $a->pos = $world->getTile($player_tile->row + $delta_row, $player_tile->col + $delta_col)->pos;
+                $this->animations[] = $a;
             }
         }
     }
@@ -391,6 +392,17 @@ class GameScene {
         }
     }
 
+    private function renderAnimations(): void {
+        foreach ($this->animations as $i => $a) {
+            if ($a->tick()) {
+                unset($this->animations[$i]);
+                continue;
+            }
+            $tile = $this->world->tiles[$a->pos];
+            $this->renderOneTile($a->texture, $tile->row, $tile->col, $a->current_frame);
+        }
+    }
+
     private function renderAll(Renderer $draw): void {
         $draw->clear();
         $this->renderTiles($draw);
@@ -399,6 +411,7 @@ class GameScene {
         $this->renderPlayer($draw);
         $this->world_event_log_renderer->render();
         $this->status_renderer->render($this->world->player, $this->world->stage);
+        $this->renderAnimations();
         if ($this->defeat) {
             $this->renderRestartMenu();
         }
