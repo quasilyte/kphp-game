@@ -9,6 +9,7 @@ use KPHPGame\Scene\GameScene\Direction;
 use KPHPGame\Scene\GameScene\Enemy;
 use KPHPGame\Person;
 use KPHPGame\Scene\GameScene\Events\AttackWorldEvent;
+use KPHPGame\Scene\GameScene\Events\DieWorldEvent;
 use KPHPGame\Scene\GameScene\Events\MoveWorldEvent;
 use KPHPGame\Scene\GameScene\Events\WorldEventLogger;
 use KPHPGame\Scene\GameScene\MapTile;
@@ -26,6 +27,7 @@ use RuntimeException;
 class GameScene {
     /** @var ffi_cdata<sdl, struct SDL_Renderer*> */
     private $sdl_renderer;
+    private Renderer $draw;
     private World $world;
     private $player_action = PlayerAction::NONE;
     /** @var ffi_cdata<sdl, struct SDL_Window*> */
@@ -41,6 +43,8 @@ class GameScene {
     /** @var ffi_cdata<sdl, struct SDL_Texture*> */
     private $orc_texture;
     private bool $escape = false;
+    private bool $defeat = false;
+    private int $turn_num = 0;
 
     public function __construct(SDL $sdl) {
         $this->sdl  = $sdl;
@@ -60,6 +64,7 @@ class GameScene {
             throw new RuntimeException($this->sdl->getError());
         }
         $draw = new Renderer($this->sdl, $this->sdl_renderer);
+        $this->draw = $draw;
 
         Logger::info('generating world');
         $this->world = new World();
@@ -72,7 +77,8 @@ class GameScene {
 
         Logger::info('starting GameScene event loop');
 
-        $this->updateRevealedTiles();
+        $this->onPlayerMoved();
+        $this->renderAll($draw);
 
         $event = $this->sdl->newEvent();
         while (true) {
@@ -81,14 +87,10 @@ class GameScene {
                 break;
             }
 
-            $this->processPlayerAction();
-
-            $draw->clear();
-            $this->renderTiles($draw);
-            $this->renderPlayer($draw);
-            $this->renderEnemies($draw);
-            $this->world_event_logger->render();
-            $draw->present();
+            if ($this->processPlayerAction()) {
+                $this->onNewTurn();
+                $this->renderAll($draw);
+            }
 
             $this->player_action = PlayerAction::NONE;
 
@@ -109,7 +111,7 @@ class GameScene {
         }
         $this->sdl->freeSurface($surface);
 
-        $surface = $this->sdl->imgLoad(AssetsManager::unit("Mage.png"));
+        $surface = $this->sdl->imgLoad(AssetsManager::unit("Player.png"));
         if (\FFI::isNull($surface)) {
             throw new RuntimeException($this->sdl->getError());
         }
@@ -154,46 +156,77 @@ class GameScene {
         }
     }
 
-    private function processPlayerAction(): void {
+    private function calculateStep(Unit $unit, int $dir): MapTile {
+        $tile = $this->world->tiles[$unit->pos];
+        $delta_col = 0;
+        $delta_row = 0;
+        if ($dir === Direction::UP) {
+            $delta_row = -1;
+        } elseif ($dir === Direction::DOWN) {
+            $delta_row = +1;
+        } elseif ($dir === Direction::LEFT) {
+            $delta_col = -1;
+        } elseif ($dir === Direction::RIGHT) {
+            $delta_col = +1;
+        }
+        return $this->world->getTile($tile->row + $delta_row, $tile->col + $delta_col);
+    }
+
+    private function tileIsFree(MapTile $tile): bool {
+        if ($tile->kind === MapTile::WALL) {
+            return false;
+        }
+        foreach ($this->world->enemies as $enemy) {
+            if ($enemy->pos === $tile->pos) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private function processPlayerAction(): bool {
+        if ($this->defeat) {
+            return false;
+        }
+
         $player = $this->world->player;
         $tile   = $this->world->getPlayerTile();
 
-        $delta_col = 0;
-        $delta_row = 0;
-        $person = Person::create("Varian");
-        $monster = Person::create("Some Ork");
+        $dir = Direction::NONE;
         if ($this->player_action === PlayerAction::MOVE_UP) {
-            $delta_row = -1;
-            $player->rotation = Direction::UP;
-            $this->world_event_logger->add_event(MoveWorldEvent::create($person, PlayerAction::MOVE_UP));
+            $dir = Direction::UP;
         } elseif ($this->player_action === PlayerAction::MOVE_DOWN) {
-            $delta_row = +1;
-            $player->rotation = Direction::DOWN;
-            $this->world_event_logger->add_event(MoveWorldEvent::create($person, PlayerAction::MOVE_DOWN));
+            $dir = Direction::DOWN;
         } elseif ($this->player_action === PlayerAction::MOVE_LEFT) {
-            $delta_col = -1;
-            $player->rotation = Direction::LEFT;
-            $this->world_event_logger->add_event(MoveWorldEvent::create($person, PlayerAction::MOVE_LEFT));
+            $dir = Direction::LEFT;
         } elseif ($this->player_action === PlayerAction::MOVE_RIGHT) {
-            $delta_col = +1;
-            $player->rotation = Direction::RIGHT;
-            $this->world_event_logger->add_event(MoveWorldEvent::create($person, PlayerAction::MOVE_RIGHT));
-        } elseif ($this->player_action === PlayerAction::ATTACK) {
-            $this->world_event_logger->add_event(AttackWorldEvent::create($person, $monster, rand(0, 10)));
+            $dir = Direction::RIGHT;
         }
-        if ($delta_col !== 0 || $delta_row !== 0) {
-            if ($this->world->getTile($tile->row + $delta_row, $tile->col + $delta_col)->kind !== MapTile::WALL) {
-                $player->pos = $this->world->getTile($tile->row + $delta_row, $tile->col + $delta_col)->pos;
+        if ($dir !== Direction::NONE) {
+            $player->direction = $dir;
+            $new_tile = $this->calculateStep($player, $player->direction);
+            if ($new_tile->pos !== $tile->pos) {
+                if ($this->tileIsFree($new_tile)) {
+                    $player->pos = $new_tile->pos;
+                }
+                $this->onPlayerMoved();
+                return true;
             }
-            // Player moved, update visibility.
-            $this->updateRevealedTiles();
-            return;
         }
+
+        return false;
     }
 
-    private function updateRevealedTiles(): void {
+    private function onPlayerMoved(): void {
         $tile = $this->world->getPlayerTile();
 
+        foreach ($this->world->enemies as $enemy) {
+            if (!$enemy->triggered && $tile->distTo($this->world->tiles[$enemy->pos]) <= 2) {
+                $enemy->triggered = true;
+            }
+        }
+
+        // Update fog of war.
         for ($delta_row = -2; $delta_row <= 2; $delta_row++) {
             for ($delta_col = -2; $delta_col <= 2; $delta_col++) {
                 if ($delta_row === -2 && $delta_col === -2) {
@@ -215,6 +248,56 @@ class GameScene {
                 }
             }
         }
+    }
+
+    private function attackPlayer(Enemy $attacker) {
+        $damage_roll = rand($attacker->min_damage, $attacker->max_damage);
+        $this->world_event_logger->add_event(AttackWorldEvent::create($attacker, $this->world->player, $damage_roll));
+        $this->world->player->hp -= $damage_roll;
+        $this->onPlayerDamageTaken();
+    }
+
+    private function onPlayerDamageTaken() {
+        if ($this->world->player->hp <= 0) {
+            $this->world_event_logger->add_event(DieWorldEvent::create($this->world->player));
+            $this->onDefeat();
+        }
+    }
+
+    private function onDefeat() {
+        $this->defeat = true;
+        $this->renderAll($this->draw);
+    }
+
+    private function onNewTurn(): void {
+        $this->turn_num++;
+
+        $player_tile = $this->world->getPlayerTile();
+
+        // Enemies try to come closer.
+        foreach ($this->world->enemies as $enemy) {
+            if (!$enemy->triggered) {
+                continue;
+            }
+            $enemy_tile = $this->world->tiles[$enemy->pos];
+            if ($enemy_tile->distTo($player_tile) <= 1) {
+                $this->attackPlayer($enemy);
+            } else {
+                $dir = $this->world->tiles[$enemy->pos]->rotationTo($player_tile);
+                $new_tile = $this->calculateStep($enemy, $dir);
+                $enemy->direction = $dir;
+                $enemy->pos = $new_tile->pos;
+            }
+        }
+    }
+
+    private function renderAll(Renderer $draw): void {
+        $draw->clear();
+        $this->renderTiles($draw);
+        $this->renderPlayer($draw);
+        $this->renderEnemies($draw);
+        $this->world_event_logger->render();
+        $draw->present();
     }
 
     private function renderTiles(Renderer $draw): void {
@@ -259,7 +342,11 @@ class GameScene {
         $tile_rect    = $this->sdl->newRect();
         $tile_rect->w = GlobalConfig::TILE_WIDTH;
         $tile_rect->h = 48;
-        $tile_rect->x = 32 * $unit->rotation;
+        if ($unit->hp > 0) {
+            $tile_rect->x = 32 * $unit->direction;
+        } else {
+            $tile_rect->x = 32 * 4;
+        }
 
         $tile = $this->world->tiles[$unit->pos];
         $render_pos    = $this->sdl->newRect();

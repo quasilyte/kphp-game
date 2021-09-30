@@ -12,4 +12,35 @@ class MapTile {
     public $col = 0;
     public $row = 0;
     public $revealed = false;
+
+    public function distTo(MapTile $other): int {
+        $col = $this->col;
+        $row = $this->row;
+        $dist = 0;
+        while ($col !== $other->col) {
+            $dist++;
+            $col += ($col > $other->col ? -1 : +1);
+        }
+        while ($row !== $other->row) {
+            $dist++;
+            $row += ($row > $other->row ? -1 : +1);
+        }
+        return $dist;
+    }
+
+    public function rotationTo(MapTile $other): int {
+        if ($this->col < $other->col) {
+            return Direction::RIGHT;
+        }
+        if ($this->col > $other->col) {
+            return Direction::LEFT;
+        }
+        if ($this->row < $other->row) {
+            return Direction::DOWN;
+        }
+        if ($this->row > $other->row) {
+            return Direction::UP;
+        }
+        return Direction::NONE;
+    }
 }

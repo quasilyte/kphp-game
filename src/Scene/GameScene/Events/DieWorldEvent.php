@@ -2,21 +2,21 @@
 
 namespace KPHPGame\Scene\GameScene\Events;
 
-use KPHPGame\Person;
+use KPHPGame\Scene\GameScene\Unit;
 
 class DieWorldEvent implements WorldEvent {
 
-    private Person $person;
+    private Unit $person;
 
-    public function __construct(Person $who) {
+    public function __construct(Unit $who) {
         $this->person = $who;
     }
 
-    public static function create(Person $person): WorldEvent {
+    public static function create(Unit $person): WorldEvent {
         return new DieWorldEvent($person);
     }
 
     public function __toString(): string {
-        return $this->person->getName() . " died";
+        return $this->person->name . " just died";
     }
 }

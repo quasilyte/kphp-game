@@ -7,4 +7,5 @@ class Direction {
     public const UP = 1;
     public const RIGHT = 2;
     public const LEFT = 3;
+    public const NONE = 4;
 }

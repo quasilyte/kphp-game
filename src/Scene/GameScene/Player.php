@@ -8,6 +8,6 @@ class Player extends Unit {
     public function __construct() {
         $this->hp = 100;
         $this->mp = 200;
-        $this->name = "Mage";
+        $this->name = "Player";
     }
 }
