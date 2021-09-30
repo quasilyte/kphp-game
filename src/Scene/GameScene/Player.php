@@ -8,7 +8,8 @@ class Player extends Unit {
     public int $next_level_exp;
 
     public function __construct() {
-        $this->hp = 100;
+//        $this->hp = 100;
+        $this->hp = 1;
         $this->mp = 200;
         $this->name = "Player";
         $this->exp = 0;

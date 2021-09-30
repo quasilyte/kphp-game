@@ -9,13 +9,14 @@ use KPHPGame\Scene\GameScene\Direction;
 use KPHPGame\Scene\GameScene\Enemy;
 use KPHPGame\Scene\GameScene\InfoPanel\Events\AttackWorldEvent;
 use KPHPGame\Scene\GameScene\InfoPanel\Events\DieWorldEvent;
+use KPHPGame\Scene\GameScene\InfoPanel\StatusRenderer;
 use KPHPGame\Scene\GameScene\InfoPanel\WorldEventLogRenderer;
 use KPHPGame\Scene\GameScene\MapTile;
 use KPHPGame\Scene\GameScene\PlayerAction;
-use KPHPGame\Scene\GameScene\InfoPanel\StatusRenderer;
 use KPHPGame\Scene\GameScene\Unit;
 use KPHPGame\Scene\GameScene\World;
 use KPHPGame\Scene\GameScene\WorldGenerator;
+use Quasilyte\SDLite\Color;
 use Quasilyte\SDLite\EventType;
 use Quasilyte\SDLite\Renderer;
 use Quasilyte\SDLite\Scancode;
@@ -63,12 +64,11 @@ class GameScene {
         if (\FFI::isNull($this->sdl_renderer)) {
             throw new RuntimeException($this->sdl->getError());
         }
-        $draw = new Renderer($this->sdl, $this->sdl_renderer);
+        $draw       = new Renderer($this->sdl, $this->sdl_renderer);
         $this->draw = $draw;
 
         Logger::info('generating world');
-        $this->world = new World();
-        WorldGenerator::generate($this->world);
+        $this->initWorld();
         $this->world_event_logger = new WorldEventLogRenderer($this->sdl, $this->sdl_renderer, $draw, $this->font);
         $this->status_renderer    = new StatusRenderer($this->sdl, $this->sdl_renderer, $draw, $this->font);
 
@@ -77,8 +77,6 @@ class GameScene {
         $this->loadTextures($draw);
 
         Logger::info('starting GameScene event loop');
-
-        $this->onPlayerMoved();
         $this->renderAll($draw);
 
         $event = $this->sdl->newEvent();
@@ -99,6 +97,13 @@ class GameScene {
         }
 
         // TODO: SDL_DestroyWindow
+    }
+
+    private function initWorld() {
+        $this->world = new World();
+        WorldGenerator::generate($this->world);
+        $this->defeat = false;
+        $this->onPlayerMoved();
     }
 
     private function loadTextures(Renderer $draw): void {
@@ -139,7 +144,7 @@ class GameScene {
             switch ($event->type) {
                 case EventType::KEYUP:
                     $scancode = $event->key->keysym->scancode;
-                    if ($scancode === Scancode::ESCAPE) {
+                    if ($scancode === Scancode::ESCAPE || ($scancode === Scancode::N && $this->defeat)) {
                         $this->escape = true;
                     } elseif ($scancode === Scancode::UP) {
                         $this->player_action = PlayerAction::MOVE_UP;
@@ -151,6 +156,9 @@ class GameScene {
                         $this->player_action = PlayerAction::MOVE_RIGHT;
                     } elseif ($scancode === Scancode::SPACE) {
                         $this->player_action = PlayerAction::ATTACK;
+                    } elseif ($scancode === Scancode::Y) {
+                        $this->initWorld();
+                        $this->renderAll($this->draw);
                     }
                     break;
             }
@@ -177,7 +185,7 @@ class GameScene {
         }
         if ($dir !== Direction::NONE) {
             $player->direction = $dir;
-            $new_tile = $this->world->calculateStepTile($tile, $player->direction);
+            $new_tile          = $this->world->calculateStepTile($tile, $player->direction);
             if ($new_tile->pos !== $tile->pos) {
                 if ($this->world->tileIsFree($new_tile)) {
                     $player->pos = $new_tile->pos;
@@ -265,9 +273,9 @@ class GameScene {
                 if (rand(0, 99) < 20) {
                     $dir = Direction::random();
                 } else {
-                    $dir = $this->world->tiles[$enemy->pos]->directionTo($player_tile);
+                    $dir              = $this->world->tiles[$enemy->pos]->directionTo($player_tile);
                 }
-                $new_tile = $this->world->calculateStepTile($enemy_tile, $dir);
+                $new_tile         = $this->world->calculateStepTile($enemy_tile, $dir);
                 if (!$this->world->tileIsFree($new_tile)) {
                     $new_dir = Direction::random();
                     [$row, $col] = $this->world->calculateStep($enemy_tile, $new_dir);
@@ -278,7 +286,7 @@ class GameScene {
                 }
                 if ($this->world->tileIsFree($new_tile)) {
                     $enemy->direction = $dir;
-                    $enemy->pos = $new_tile->pos;
+                    $enemy->pos       = $new_tile->pos;
                 }
             }
         }
@@ -291,6 +299,9 @@ class GameScene {
         $this->renderEnemies($draw);
         $this->world_event_logger->render();
         $this->status_renderer->render($this->world->player);
+        if ($this->defeat) {
+            $this->renderRestartMenu();
+        }
         $draw->present();
     }
 
@@ -359,5 +370,37 @@ class GameScene {
         if (!$draw->copy($texture, \FFI::addr($tile_rect), \FFI::addr($render_pos))) {
             throw new RuntimeException($this->sdl->getError());
         }
+    }
+
+    private function renderRestartMenu() {
+        $text_color = new Color(255, 30, 30);
+
+        $end_game         = "Game Over";
+        $end_game_surface = $this->sdl->renderUTF8Blended($this->font, $end_game, $text_color);
+        $end_game_sizes   = $this->sdl->sizeUTF8($this->font, $end_game);
+        $end_game_texture = $this->sdl->createTextureFromSurface($this->sdl_renderer, $end_game_surface);
+
+        $end_game_rect    = $this->sdl->newRect();
+        $end_game_rect->x = (int)(GlobalConfig::WINDOW_WIDTH / 2 - $end_game_sizes[0] / 2);
+        $end_game_rect->y = (int)(GlobalConfig::WINDOW_HEIGHT / 2 - $end_game_sizes[1] / 2);
+        $end_game_rect->w = $end_game_sizes[0];
+        $end_game_rect->h = $end_game_sizes[1];
+        if (!$this->draw->copy($end_game_texture, null, \FFI::addr($end_game_rect))) {
+            throw new \RuntimeException($this->sdl->getError());
+        }
+        $this->sdl->destroyTexture($end_game_texture);
+
+        $restart         = "Restart? [y/n]";
+        $restart_surface = $this->sdl->renderUTF8Blended($this->font, $restart, $text_color);
+        $restart_sizes   = $this->sdl->sizeUTF8($this->font, $restart);
+        $restart_texture = $this->sdl->createTextureFromSurface($this->sdl_renderer, $restart_surface);
+        $end_game_rect->x = (int)(GlobalConfig::WINDOW_WIDTH / 2 - $restart_sizes[0] / 2);
+        $end_game_rect->y = (int)(GlobalConfig::WINDOW_HEIGHT / 2 + GlobalConfig::TEXT_MARGIN + $restart_sizes[1] / 2);
+        $end_game_rect->w = $restart_sizes[0];
+        $end_game_rect->h = $restart_sizes[1];
+        if (!$this->draw->copy($restart_texture, null, \FFI::addr($end_game_rect))) {
+            throw new \RuntimeException($this->sdl->getError());
+        }
+        $this->sdl->destroyTexture($restart_texture);
     }
 }
