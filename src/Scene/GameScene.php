@@ -178,7 +178,7 @@ class GameScene {
                     } else if ($scancode === Scancode::Q) {
                         $this->player_action = PlayerAction::MAGIC_FIREBALL;
                     } else if ($scancode === Scancode::W) {
-                        $this->player_action = PlayerAction::MAGIC_THUNDER;
+                        $this->player_action = PlayerAction::MAGIC_TORNADO;
                     } else if ($scancode === Scancode::E) {
                         $this->player_action = PlayerAction::MAGIC_THUNDER;
                     }
