@@ -33,5 +33,9 @@ class WorldGenerator {
         $world->map_rows = $num_rows;
 
         $world->player->pos = $world->getTile(2, 2)->pos;
+
+        $orc = new Enemy('Orc');
+        $orc->pos = $world->player->pos + 1;
+        $world->enemies[] = $orc;
     }
 }

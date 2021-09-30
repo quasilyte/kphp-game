@@ -2,10 +2,12 @@
 
 namespace KPHPGame\Scene\GameScene;
 
-class Player {
-    public $pos = 0;
-    public $rotation = 0;
+class Player extends Unit {
+    public int $mp;
 
-    public $hp = 100;
-    public $mp = 200;
+    public function __construct() {
+        $this->hp = 100;
+        $this->mp = 200;
+        $this->name = "Mage";
+    }
 }

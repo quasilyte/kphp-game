@@ -13,6 +13,9 @@ class World {
 
     public Player $player;
 
+    /** @var Enemy[] */
+    public $enemies;
+
     public function __construct() {
         $this->player = new Player();
     }

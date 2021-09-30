@@ -2,14 +2,15 @@
 
 namespace KPHPGame\Scene;
 
-use FFI;
 use KPHPGame\AssetsManager;
 use KPHPGame\GlobalConfig;
 use KPHPGame\Logger;
 use KPHPGame\Scene\GameScene\Direction;
+use KPHPGame\Scene\GameScene\Enemy;
 use KPHPGame\Scene\GameScene\Events\WorldEventLogger;
 use KPHPGame\Scene\GameScene\MapTile;
 use KPHPGame\Scene\GameScene\PlayerAction;
+use KPHPGame\Scene\GameScene\Unit;
 use KPHPGame\Scene\GameScene\World;
 use KPHPGame\Scene\GameScene\WorldGenerator;
 use Quasilyte\SDLite\EventType;
@@ -34,6 +35,8 @@ class GameScene {
     private $tileset_texture;
     /** @var ffi_cdata<sdl, struct SDL_Texture*> */
     private $player_texture;
+    /** @var ffi_cdata<sdl, struct SDL_Texture*> */
+    private $orc_texture;
     private bool $escape = false;
 
     public function __construct(SDL $sdl) {
@@ -50,7 +53,7 @@ class GameScene {
             GlobalConfig::WINDOW_HEIGHT);
 
         $this->sdl_renderer = $this->sdl->createRenderer($this->sdl_window);
-        if (FFI::isNull($this->sdl_renderer)) {
+        if (\FFI::isNull($this->sdl_renderer)) {
             throw new RuntimeException($this->sdl->getError());
         }
         $draw = new Renderer($this->sdl, $this->sdl_renderer);
@@ -83,6 +86,7 @@ class GameScene {
 
             $this->renderTiles($draw);
             $this->renderPlayer($draw);
+            $this->renderEnemies($draw);
             $this->world_event_logger->render();
             $draw->present();
 
@@ -96,21 +100,31 @@ class GameScene {
 
     private function loadTextures(Renderer $draw): void {
         $surface = $this->sdl->imgLoad(AssetsManager::tile("wasteland_compact.png"));
-        if (FFI::isNull($surface)) {
+        if (\FFI::isNull($surface)) {
             throw new RuntimeException($this->sdl->getError());
         }
         $this->tileset_texture = $this->sdl->createTextureFromSurface($this->sdl_renderer, $surface);
-        if (FFI::isNull($this->tileset_texture)) {
+        if (\FFI::isNull($this->tileset_texture)) {
             throw new RuntimeException($this->sdl->getError());
         }
         $this->sdl->freeSurface($surface);
 
-        $surface = $this->sdl->imgLoad(AssetsManager::unit("mage.png"));
-        if (FFI::isNull($surface)) {
+        $surface = $this->sdl->imgLoad(AssetsManager::unit("Mage.png"));
+        if (\FFI::isNull($surface)) {
             throw new RuntimeException($this->sdl->getError());
         }
         $this->player_texture = $this->sdl->createTextureFromSurface($this->sdl_renderer, $surface);
-        if (FFI::isNull($this->player_texture)) {
+        if (\FFI::isNull($this->player_texture)) {
+            throw new RuntimeException($this->sdl->getError());
+        }
+        $this->sdl->freeSurface($surface);
+
+        $surface = $this->sdl->imgLoad(AssetsManager::unit("Orc.png"));
+        if (\FFI::isNull($surface)) {
+            throw new RuntimeException($this->sdl->getError());
+        }
+        $this->orc_texture = $this->sdl->createTextureFromSurface($this->sdl_renderer, $surface);
+        if (\FFI::isNull($this->player_texture)) {
             throw new RuntimeException($this->sdl->getError());
         }
         $this->sdl->freeSurface($surface);
@@ -215,25 +229,41 @@ class GameScene {
             }
             $tile_pos->x = $tile->col * $tile_rect->w;
             $tile_pos->y = $tile->row * $tile_rect->h;
-            if (!$draw->copy($this->tileset_texture, FFI::addr($tile_rect), FFI::addr($tile_pos))) {
+            if (!$draw->copy($this->tileset_texture, \FFI::addr($tile_rect), \FFI::addr($tile_pos))) {
                 throw new RuntimeException($this->sdl->getError());
             }
         }
     }
 
     private function renderPlayer(Renderer $draw): void {
+        $this->renderUnit($draw, $this->world->player);
+    }
+
+    private function renderEnemies(Renderer $draw) {
+        foreach ($this->world->enemies as $unit) {
+            $this->renderUnit($draw, $unit);
+        }
+    }
+
+    private function renderUnit(Renderer $draw, Unit $unit) {
         $tile_rect    = $this->sdl->newRect();
         $tile_rect->w = GlobalConfig::TILE_WIDTH;
         $tile_rect->h = 48;
-        $tile_rect->x = 32 * $this->world->player->rotation;
+        $tile_rect->x = 32 * $unit->rotation;
 
-        $tile = $this->world->getPlayerTile();
+        $tile = $this->world->tiles[$unit->pos];
         $render_pos    = $this->sdl->newRect();
         $render_pos->w = 32;
         $render_pos->h = 48;
         $render_pos->x = $tile->col * 32;
         $render_pos->y = ($tile->row * 32) - 16;
-        if (!$draw->copy($this->player_texture, FFI::addr($tile_rect), FFI::addr($render_pos))) {
+
+        $texture = $this->player_texture;
+        if ($unit->name === 'Orc') {
+            $texture = $this->orc_texture;
+        }
+
+        if (!$draw->copy($texture, \FFI::addr($tile_rect), \FFI::addr($render_pos))) {
             throw new RuntimeException($this->sdl->getError());
         }
     }
