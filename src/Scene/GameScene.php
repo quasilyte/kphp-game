@@ -57,7 +57,7 @@ class GameScene {
         Logger::info('generating world');
         $this->world = new World();
         WorldGenerator::generate($this->world);
-        $this->world_event_logger = new WorldEventLogger($this->sdl, $draw, $this->font);
+        $this->world_event_logger = new WorldEventLogger($this->sdl, $this->sdl_renderer,  $draw, $this->font);
         $test_log_data            = WorldEventLogger::gen_test_data();
         foreach ($test_log_data as $log_event) {
             $this->world_event_logger->add_event($log_event);

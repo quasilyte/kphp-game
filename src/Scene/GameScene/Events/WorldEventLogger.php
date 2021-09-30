@@ -28,11 +28,12 @@ class WorldEventLogger {
     private $text_color;
 
     /**
-     * //     * @param ffi_cdata<sdl, struct SDL_Renderer*> $renderer
+     * @param ffi_cdata<sdl, struct SDL_Renderer*> $renderer
      * @param ffi_cdata<sdl_ttf, struct TTF_Font*> $font
      */
-    public function __construct(SDL $sdl, Renderer $draw, $font) {
+    public function __construct(SDL $sdl, $renderer, Renderer $draw, $font) {
         $this->sdl        = $sdl;
+        $this->renderer   = $renderer;
         $this->draw       = $draw;
         $this->font       = $font;
         $this->text_color = new Color(255, 255, 255);
