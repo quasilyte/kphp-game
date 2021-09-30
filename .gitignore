@@ -1,0 +1,5 @@
+kphp_out/
+bin/
+.idea/
+kphp2cpp
+vendor/
