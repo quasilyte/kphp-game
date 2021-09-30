@@ -5,15 +5,16 @@ namespace KPHPGame\Scene;
 use KPHPGame\AssetsManager;
 use KPHPGame\GlobalConfig;
 use KPHPGame\Logger;
+use KPHPGame\Person;
 use KPHPGame\Scene\GameScene\Direction;
 use KPHPGame\Scene\GameScene\Enemy;
-use KPHPGame\Person;
 use KPHPGame\Scene\GameScene\Events\AttackWorldEvent;
 use KPHPGame\Scene\GameScene\Events\DieWorldEvent;
 use KPHPGame\Scene\GameScene\Events\MoveWorldEvent;
 use KPHPGame\Scene\GameScene\Events\WorldEventLogger;
 use KPHPGame\Scene\GameScene\MapTile;
 use KPHPGame\Scene\GameScene\PlayerAction;
+use KPHPGame\Scene\GameScene\InfoPanel\StatusRenderer;
 use KPHPGame\Scene\GameScene\Unit;
 use KPHPGame\Scene\GameScene\World;
 use KPHPGame\Scene\GameScene\WorldGenerator;
@@ -34,6 +35,7 @@ class GameScene {
     private $sdl_window;
     private SDL $sdl;
     private WorldEventLogger $world_event_logger;
+    private StatusRenderer $status_renderer;
     /** $var ffi_cdata<sdl_ttf, struct TTF_Font*> */
     private $font;
     /** @var ffi_cdata<sdl, struct SDL_Texture*> */
@@ -69,7 +71,8 @@ class GameScene {
         Logger::info('generating world');
         $this->world = new World();
         WorldGenerator::generate($this->world);
-        $this->world_event_logger = new WorldEventLogger($this->sdl, $this->sdl_renderer,  $draw, $this->font);
+        $this->world_event_logger = new WorldEventLogger($this->sdl, $this->sdl_renderer, $draw, $this->font);
+        $this->status_renderer    = new StatusRenderer($this->sdl, $this->sdl_renderer, $draw, $this->font);
 
         Logger::info('rendering world');
 
@@ -297,6 +300,7 @@ class GameScene {
         $this->renderPlayer($draw);
         $this->renderEnemies($draw);
         $this->world_event_logger->render();
+        $this->status_renderer->render($this->world->player);
         $draw->present();
     }
 
@@ -348,7 +352,7 @@ class GameScene {
             $tile_rect->x = 32 * 4;
         }
 
-        $tile = $this->world->tiles[$unit->pos];
+        $tile          = $this->world->tiles[$unit->pos];
         $render_pos    = $this->sdl->newRect();
         $render_pos->w = 32;
         $render_pos->h = 48;

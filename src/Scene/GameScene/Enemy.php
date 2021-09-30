@@ -15,6 +15,7 @@ class Enemy extends Unit {
             $this->hp = 50;
             $this->min_damage = 1;
             $this->max_damage = 10;
+            $this->level = 1;
         } else {
             throw new \RuntimeException("creating invalid enemy: $name");
         }
