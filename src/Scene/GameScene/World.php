@@ -57,6 +57,9 @@ class World {
         if ($tile->kind === MapTile::WALL) {
             return false;
         }
+        if ($this->player->pos === $tile->pos) {
+            return false;
+        }
         foreach ($this->enemies as $enemy) {
             if ($enemy->pos === $tile->pos) {
                 return false;

@@ -256,10 +256,29 @@ class GameScene {
             if ($enemy_tile->distTo($player_tile) <= 1) {
                 $this->attackPlayer($enemy);
             } else {
-                $dir = $this->world->tiles[$enemy->pos]->rotationTo($player_tile);
+                // 10% chance to stand still.
+                if (rand(0, 99) < 10) {
+                    continue;
+                }
+                // 20% chance to a random step, 80% to make a step towards the player
+                if (rand(0, 99) < 20) {
+                    $dir = Direction::random();
+                } else {
+                    $dir = $this->world->tiles[$enemy->pos]->directionTo($player_tile);
+                }
                 $new_tile = $this->world->calculateStepTile($enemy_tile, $dir);
-                $enemy->direction = $dir;
-                $enemy->pos = $new_tile->pos;
+                if (!$this->world->tileIsFree($new_tile)) {
+                    $new_dir = Direction::random();
+                    [$row, $col] = $this->world->calculateStep($enemy_tile, $new_dir);
+                    if ($this->world->hasTileAt($row, $col)) {
+                        $new_tile = $this->world->getTile($row, $col);
+                        $dir = $new_dir;
+                    }
+                }
+                if ($this->world->tileIsFree($new_tile)) {
+                    $enemy->direction = $dir;
+                    $enemy->pos = $new_tile->pos;
+                }
             }
         }
     }
@@ -308,7 +327,9 @@ class GameScene {
 
     private function renderEnemies(Renderer $draw) {
         foreach ($this->world->enemies as $unit) {
-            $this->renderUnit($draw, $unit);
+            if ($this->world->tiles[$unit->pos]->revealed) {
+                $this->renderUnit($draw, $unit);
+            }
         }
     }
 

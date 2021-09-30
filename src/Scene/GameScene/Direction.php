@@ -8,4 +8,8 @@ class Direction {
     public const RIGHT = 2;
     public const LEFT = 3;
     public const NONE = 4;
+
+    public static function random(): int {
+        return rand(0, 3);
+    }
 }

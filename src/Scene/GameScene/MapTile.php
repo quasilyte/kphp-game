@@ -28,7 +28,7 @@ class MapTile {
         return $dist;
     }
 
-    public function rotationTo(MapTile $other): int {
+    public function directionTo(MapTile $other): int {
         if ($this->col < $other->col) {
             return Direction::RIGHT;
         }
