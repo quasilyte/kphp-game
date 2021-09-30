@@ -20,11 +20,48 @@ class World {
         $this->player = new Player();
     }
 
+    public function hasTileAt(int $row, int $col): bool {
+        return $col >= 0 && $row >= 0 && $col < $this->map_cols && $row < $this->map_rows;
+    }
+
     public function getTile(int $row, int $col): MapTile {
         return $this->tiles[$row * $this->map_cols + $col];
     }
 
     public function getPlayerTile(): MapTile {
         return $this->tiles[$this->player->pos];
+    }
+
+    /** @return tuple(int, int) */
+    public function calculateStep(MapTile $tile, int $dir) {
+        $delta_col = 0;
+        $delta_row = 0;
+        if ($dir === Direction::UP) {
+            $delta_row = -1;
+        } elseif ($dir === Direction::DOWN) {
+            $delta_row = +1;
+        } elseif ($dir === Direction::LEFT) {
+            $delta_col = -1;
+        } elseif ($dir === Direction::RIGHT) {
+            $delta_col = +1;
+        }
+        return tuple($tile->row + $delta_row, $tile->col + $delta_col);
+    }
+
+    public function calculateStepTile(MapTile $tile, int $dir): MapTile {
+        [$row, $col] = $this->calculateStep($tile, $dir);
+        return $this->getTile($row, $col);
+    }
+
+    public function tileIsFree(MapTile $tile): bool {
+        if ($tile->kind === MapTile::WALL) {
+            return false;
+        }
+        foreach ($this->enemies as $enemy) {
+            if ($enemy->pos === $tile->pos) {
+                return false;
+            }
+        }
+        return true;
     }
 }

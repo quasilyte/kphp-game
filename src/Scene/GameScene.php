@@ -157,34 +157,6 @@ class GameScene {
         }
     }
 
-    private function calculateStep(Unit $unit, int $dir): MapTile {
-        $tile = $this->world->tiles[$unit->pos];
-        $delta_col = 0;
-        $delta_row = 0;
-        if ($dir === Direction::UP) {
-            $delta_row = -1;
-        } elseif ($dir === Direction::DOWN) {
-            $delta_row = +1;
-        } elseif ($dir === Direction::LEFT) {
-            $delta_col = -1;
-        } elseif ($dir === Direction::RIGHT) {
-            $delta_col = +1;
-        }
-        return $this->world->getTile($tile->row + $delta_row, $tile->col + $delta_col);
-    }
-
-    private function tileIsFree(MapTile $tile): bool {
-        if ($tile->kind === MapTile::WALL) {
-            return false;
-        }
-        foreach ($this->world->enemies as $enemy) {
-            if ($enemy->pos === $tile->pos) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     private function processPlayerAction(): bool {
         if ($this->defeat) {
             return false;
@@ -205,9 +177,9 @@ class GameScene {
         }
         if ($dir !== Direction::NONE) {
             $player->direction = $dir;
-            $new_tile = $this->calculateStep($player, $player->direction);
+            $new_tile = $this->world->calculateStepTile($tile, $player->direction);
             if ($new_tile->pos !== $tile->pos) {
-                if ($this->tileIsFree($new_tile)) {
+                if ($this->world->tileIsFree($new_tile)) {
                     $player->pos = $new_tile->pos;
                 }
                 $this->onPlayerMoved();
@@ -285,7 +257,7 @@ class GameScene {
                 $this->attackPlayer($enemy);
             } else {
                 $dir = $this->world->tiles[$enemy->pos]->rotationTo($player_tile);
-                $new_tile = $this->calculateStep($enemy, $dir);
+                $new_tile = $this->world->calculateStepTile($enemy_tile, $dir);
                 $enemy->direction = $dir;
                 $enemy->pos = $new_tile->pos;
             }
