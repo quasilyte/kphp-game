@@ -59,7 +59,7 @@ class WorldEventLogRenderer {
         if (empty($this->events)) {
             return;
         }
-        $this->rect->y = self::defaultRectY();
+        $this->rect->y = GlobalConfig::INFO_PANEL_Y_SPLIT_OFFSET + GlobalConfig::TEXT_MARGIN;
         for ($i = 0; $i < count($this->events); $i++) {
             $raw_text   = (string)$this->events[$i];
             $split_text = explode("\n", $raw_text);
@@ -92,9 +92,5 @@ class WorldEventLogRenderer {
                 $this->sdl->destroyTexture($msg_texture);
             }
         }
-    }
-
-    private static function defaultRectY(): int {
-        return GlobalConfig::WINDOW_HEIGHT - 512 + GlobalConfig::TEXT_MARGIN;
     }
 }

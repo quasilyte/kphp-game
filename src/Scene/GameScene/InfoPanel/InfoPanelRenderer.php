@@ -54,7 +54,7 @@ class InfoPanelRenderer {
         $this->rect->h = GlobalConfig::WINDOW_HEIGHT;
         $this->draw->fillRect($this->rect);
         $this->rect->x = GlobalConfig::INFO_PANEL_OFFSET;
-        $this->rect->y = 300;
+        $this->rect->y = GlobalConfig::INFO_PANEL_Y_SPLIT_OFFSET;
         $this->rect->w = GlobalConfig::WINDOW_WIDTH;
         $this->rect->h = GlobalConfig::INFO_PANEL_WINDOW_BORDER;
         $this->draw->fillRect($this->rect);
