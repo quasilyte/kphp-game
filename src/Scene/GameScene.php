@@ -255,6 +255,7 @@ class GameScene {
             $enemy_tile = $this->world->tiles[$enemy->pos];
             if ($enemy_tile->distTo($player_tile) <= 1) {
                 $this->attackPlayer($enemy);
+                $enemy->direction = $this->world->tiles[$enemy->pos]->directionTo($player_tile);
             } else {
                 // 10% chance to stand still.
                 if (rand(0, 99) < 10) {
