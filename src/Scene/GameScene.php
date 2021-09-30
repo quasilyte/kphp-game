@@ -3,6 +3,7 @@
 namespace KPHPGame\Scene;
 
 use KPHPGame\GlobalConfig;
+use KPHPGame\Logger;
 use Quasilyte\SDLite\EventType;
 use Quasilyte\SDLite\Renderer;
 use Quasilyte\SDLite\Scancode;
@@ -14,15 +15,17 @@ class GameScene {
   }
 
   public function run() {
-    $this->window = $this->sdl->createWindow(
+    $this->sdl_window = $this->sdl->createWindow(
       GlobalConfig::GAME_NAME,
       SDL::WINDOWPOS_CENTERED,
       SDL::WINDOWPOS_CENTERED,
       GlobalConfig::WINDOW_WIDTH,
       GlobalConfig::WINDOW_HEIGHT);
 
-    $this->sdl_renderer = $this->sdl->createRenderer($this->window, -1);
+    $this->sdl_renderer = $this->sdl->createRenderer($this->sdl_window, -1);
     $draw = new Renderer($this->sdl, $this->sdl_renderer);
+
+    Logger::info("starting GameScene event loop");
 
     $event = $this->sdl->newEvent();
     while (true) {
@@ -57,7 +60,7 @@ class GameScene {
   private $sdl;
 
   /** @var ffi_cdata<sdl, struct SDL_Window*> */
-  private $window;
+  private $sdl_window;
 
   /** @var ffi_cdata<sdl, struct SDL_Renderer*> */
   private $sdl_renderer;
