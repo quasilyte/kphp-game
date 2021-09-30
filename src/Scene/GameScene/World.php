@@ -73,7 +73,10 @@ class World {
         return true;
     }
 
-    public function tileIsPortal(): bool {
+    public function tileIsPortal(MapTile $tile): bool {
+        if ($tile->kind === MapTile::PORTAL) {
+            return true;
+        }
         return false;
     }
 }

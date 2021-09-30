@@ -36,18 +36,18 @@ class WorldGenerator {
         $world->player->pos = $world->getTile(7, 7)->pos;
 
         // TODO: spawn random enemies and random places.
-        $orc = new Enemy('Orc');
-        $orc->pos = $world->player->pos + 4;
+        $orc              = new Enemy('Orc');
+        $orc->pos         = $world->player->pos + 4;
         $world->enemies[] = $orc;
 
         $num_walls = rand(6, 9);
         while ($num_walls > 0) {
             $wall_len = rand(1, 8);
-            $dir = rand(0, 3);
+            $dir      = rand(0, 3);
             while (true) {
                 $wall_col = rand(1, $num_cols - 1);
                 $wall_row = rand(1, $num_rows - 1);
-                $tile = $world->getTile($wall_row, $wall_col);
+                $tile     = $world->getTile($wall_row, $wall_col);
                 if (!$world->tileIsFree($tile)) {
                     continue; // Try again
                 }
@@ -64,7 +64,7 @@ class WorldGenerator {
                         continue;
                     }
                     $next_tile->kind = MapTile::WALL;
-                    $tile = $next_tile;
+                    $tile            = $next_tile;
                 }
                 $num_walls--;
                 break; // OK
@@ -76,7 +76,7 @@ class WorldGenerator {
             while (true) {
                 $wall_col = rand(1, $num_cols - 1);
                 $wall_row = rand(1, $num_rows - 1);
-                $tile = $world->getTile($wall_row, $wall_col);
+                $tile     = $world->getTile($wall_row, $wall_col);
                 if (!$world->tileIsFree($tile)) {
                     continue; // Try again
                 }
@@ -94,13 +94,17 @@ class WorldGenerator {
     // Portal occupies 4 tiles, starting from top-left tile at $pos.
     // All tiles become MapTile::PORTAL.
     private static function deployPortal(World $world, int $pos): void {
+        if ($world->stage >= 3) {
+            return;
+        }
         $world->portal_pos = $pos;
 
         $row = $world->tiles[$pos]->row;
         $col = $world->tiles[$pos]->col;
-        $world->getTile($row, $col)->kind = MapTile::PORTAL;
-        $world->getTile($row, $col+1)->kind = MapTile::PORTAL;
-        $world->getTile($row+1, $col)->kind = MapTile::PORTAL;
-        $world->getTile($row+1, $col+1)->kind = MapTile::PORTAL;
+
+        $world->getTile($row, $col)->kind         = MapTile::PORTAL;
+        $world->getTile($row, $col + 1)->kind     = MapTile::PORTAL;
+        $world->getTile($row + 1, $col)->kind     = MapTile::PORTAL;
+        $world->getTile($row + 1, $col + 1)->kind = MapTile::PORTAL;
     }
 }

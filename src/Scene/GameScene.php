@@ -6,19 +6,17 @@ use KPHPGame\AssetsManager;
 use KPHPGame\GlobalConfig;
 use KPHPGame\Logger;
 use KPHPGame\Scene\GameScene\AnimatedTile;
+use KPHPGame\Scene\GameScene\AlertWindowRenderer;
 use KPHPGame\Scene\GameScene\Colors;
 use KPHPGame\Scene\GameScene\Direction;
 use KPHPGame\Scene\GameScene\Enemy;
 use KPHPGame\Scene\GameScene\InfoPanel\Events\AttackWorldEvent;
 use KPHPGame\Scene\GameScene\InfoPanel\Events\DieWorldEvent;
-use KPHPGame\Scene\GameScene\InfoPanel\Events\LevelUpWorldEvent;
 use KPHPGame\Scene\GameScene\InfoPanel\Events\SpellCastWorldEvent;
-use KPHPGame\Scene\GameScene\InfoPanel\StatusRenderer;
-use KPHPGame\Scene\GameScene\InfoPanel\WorldEventLogRenderer;
+use KPHPGame\Scene\GameScene\InfoPanel\InfoPanelRenderer;
 use KPHPGame\Scene\GameScene\MapTile;
 use KPHPGame\Scene\GameScene\Player;
 use KPHPGame\Scene\GameScene\PlayerAction;
-use KPHPGame\Scene\GameScene\AlertWindowRenderer;
 use KPHPGame\Scene\GameScene\Spell;
 use KPHPGame\Scene\GameScene\Unit;
 use KPHPGame\Scene\GameScene\World;
@@ -41,9 +39,10 @@ class GameScene {
     /** @var ffi_cdata<sdl, struct SDL_Window*> */
     private $sdl_window;
     private SDL $sdl;
-    private WorldEventLogRenderer $world_event_log_renderer;
-    private StatusRenderer $status_renderer;
+    private InfoPanelRenderer $info_panel_renderer;
     private AlertWindowRenderer $text_block_renderer;
+    /** @var ffi_cdata<sdl, struct SDL_Rect> */
+    private $rect;
     /** $var ffi_cdata<sdl_ttf, struct TTF_Font*> */
     private $font;
     private Colors $colors;
@@ -59,13 +58,14 @@ class GameScene {
     private $thunder_effect_texture;
     private bool $escape = false;
     private bool $defeat = false;
+    private bool $is_modal_window = false;
     private int $turn_num = 0;
     /** @var AnimatedTile[] */
     private $animations;
 
     public function __construct(SDL $sdl) {
-        $this->sdl  = $sdl;
-        $this->font = $sdl->openFont(AssetsManager::font('FreeMono'), GlobalConfig::FONT_SIZE);
+        $this->sdl    = $sdl;
+        $this->font   = $sdl->openFont(AssetsManager::font('FreeMono'), GlobalConfig::FONT_SIZE);
         $this->colors = new Colors();
     }
 
@@ -83,19 +83,19 @@ class GameScene {
         }
         $draw       = new Renderer($this->sdl, $this->sdl_renderer);
         $this->draw = $draw;
+        $this->rect = $this->sdl->newRect();
 
         Logger::info('generating world');
         $this->initWorld();
-        $this->world_event_log_renderer = new WorldEventLogRenderer($this->sdl, $this->sdl_renderer, $draw, $this->font, $this->colors->white);
-        $this->status_renderer          = new StatusRenderer($this->sdl, $this->sdl_renderer, $draw, $this->font, $this->colors->white);
-        $this->text_block_renderer      = new AlertWindowRenderer($this->sdl, $this->draw, $this->sdl_renderer);
+        $this->info_panel_renderer = new InfoPanelRenderer($this->sdl, $this->sdl_renderer, $draw, $this->rect, $this->font, $this->colors);
+        $this->text_block_renderer = new AlertWindowRenderer($this->sdl, $this->draw, $this->sdl_renderer, $this->rect);
 
         Logger::info('rendering world');
 
         $this->loadTextures();
 
         Logger::info('starting GameScene event loop');
-        $this->renderAll($draw);
+        $this->renderAll();
 
         $event = $this->sdl->newEvent();
         while (true) {
@@ -106,16 +106,9 @@ class GameScene {
 
             if ($this->processPlayerAction()) {
                 $this->onNewTurn();
-                $this->renderAll($draw);
+                $this->renderAll();
             } else if (count($this->animations) !== 0) {
-                $this->renderAll($draw);
-            }
-
-            if ($this->world->tileIsPortal()) {
-                Logger::info('i am on portal');
-                $stage = $this->world->stage;
-                $text = ["You find entrance to $stage stage", 'Do you want to go now?[y/n]'];
-                $this->text_block_renderer->render($text, $this->font, $this->colors->white, $this->colors->black);
+                $this->renderAll();
             }
 
             $this->player_action = PlayerAction::NONE;
@@ -166,8 +159,28 @@ class GameScene {
             switch ($event->type) {
                 case EventType::KEYUP:
                     $scancode = $event->key->keysym->scancode;
-                    if ($scancode === Scancode::ESCAPE || ($scancode === Scancode::N && $this->defeat)) {
+                    if ($scancode === Scancode::ESCAPE) {
                         $this->escape = true;
+                    } elseif ($this->is_modal_window) {
+                        if ($scancode === Scancode::Y) {
+                            if ($this->defeat) {
+                                $this->initWorld();
+                                $this->is_modal_window = false;
+                            } elseif ($this->world->player->on_portal) {
+                                $this->world->player->on_portal = false;
+                                $this->is_modal_window          = false;
+                                $this->initWorld($this->world->player, $this->world->stage + 1);
+                            }
+                            $this->renderAll();
+                        } elseif ($scancode === Scancode::N) {
+                            if ($this->defeat) {
+                                $this->escape = true;
+                            } elseif ($this->world->player->on_portal) {
+                                $this->world->player->on_portal = false;
+                                $this->is_modal_window          = false;
+                                $this->renderAll();
+                            }
+                        }
                     } elseif ($scancode === Scancode::UP) {
                         $this->player_action = PlayerAction::MOVE_UP;
                     } elseif ($scancode === Scancode::DOWN) {
@@ -178,14 +191,11 @@ class GameScene {
                         $this->player_action = PlayerAction::MOVE_RIGHT;
                     } elseif ($scancode === Scancode::SPACE) {
                         $this->player_action = PlayerAction::ATTACK;
-                    } elseif ($scancode === Scancode::Y) {
-                        $this->initWorld();
-                        $this->renderAll($this->draw);
-                    } else if ($scancode === Scancode::Q) {
+                    } elseif ($scancode === Scancode::Q) {
                         $this->player_action = PlayerAction::MAGIC_FIREBALL;
-                    } else if ($scancode === Scancode::W) {
+                    } elseif ($scancode === Scancode::W) {
                         $this->player_action = PlayerAction::MAGIC_TORNADO;
-                    } else if ($scancode === Scancode::E) {
+                    } elseif ($scancode === Scancode::E) {
                         $this->player_action = PlayerAction::MAGIC_THUNDER;
                     }
                     break;
@@ -230,9 +240,9 @@ class GameScene {
         $spell = null;
         if ($this->player_action === PlayerAction::MAGIC_FIREBALL) {
             $spell = $player->spellbook->fireball;
-        } else if ($this->player_action === PlayerAction::MAGIC_TORNADO) {
+        } elseif ($this->player_action === PlayerAction::MAGIC_TORNADO) {
             $spell = $player->spellbook->tornado;
-        } else if ($this->player_action === PlayerAction::MAGIC_THUNDER) {
+        } elseif ($this->player_action === PlayerAction::MAGIC_THUNDER) {
             $spell = $player->spellbook->thunder;
         }
         if ($spell !== null) {
@@ -240,7 +250,7 @@ class GameScene {
                 return false; // Not enough mana
             }
             $player->mp -= $spell->mp_cost;
-            $this->world_event_log_renderer->add_event(SpellCastWorldEvent::create($spell));
+            $this->info_panel_renderer->add_event(SpellCastWorldEvent::create($spell));
             if ($spell === $player->spellbook->thunder) {
                 $this->castThunder();
             }
@@ -263,6 +273,11 @@ class GameScene {
             if ($new_tile->pos !== $tile->pos) {
                 if ($this->world->tileIsFree($new_tile)) {
                     $player->pos = $new_tile->pos;
+                }
+                if ($this->world->tileIsPortal($new_tile)) {
+                    $player->on_portal = true;
+                } else {
+                    $player->on_portal = false;
                 }
                 $this->onPlayerMoved();
                 return true;
@@ -306,7 +321,7 @@ class GameScene {
     }
 
     private function attackEnemy(Enemy $target, int $damage) {
-        $this->world_event_log_renderer->add_event(AttackWorldEvent::create($this->world->player, $target, $damage));
+        $this->info_panel_renderer->add_event(AttackWorldEvent::create($this->world->player, $target, $damage));
         $target->hp -= $damage;
         $this->onEnemyDamageTaken($target);
     }
@@ -330,24 +345,23 @@ class GameScene {
 
     private function attackPlayer(Enemy $attacker) {
         $damage_roll = rand($attacker->min_damage, $attacker->max_damage);
-        $this->world_event_log_renderer->add_event(AttackWorldEvent::create($attacker, $this->world->player, $damage_roll));
+        $this->info_panel_renderer->add_event(AttackWorldEvent::create($attacker, $this->world->player, $damage_roll));
         $this->world->player->hp -= $damage_roll;
         $this->onPlayerDamageTaken();
     }
 
     private function onPlayerDamageTaken() {
 //        $this->world->player->lvlUp();
-//        $this->world_event_log_renderer->add_event(LevelUpWorldEvent::create($this->world->player));
-
+//        $this->info_panel_renderer->add_event(LevelUpWorldEvent::create($this->world->player));
         if ($this->world->player->hp <= 0) {
-            $this->world_event_log_renderer->add_event(DieWorldEvent::create($this->world->player));
+            $this->info_panel_renderer->add_event(DieWorldEvent::create($this->world->player));
             $this->onDefeat();
         }
     }
 
     private function onDefeat() {
         $this->defeat = true;
-        $this->renderAll($this->draw);
+        $this->renderAll();
     }
 
     private function onNewTurn(): void {
@@ -403,19 +417,17 @@ class GameScene {
         }
     }
 
-    private function renderAll(Renderer $draw): void {
-        $draw->clear();
-        $this->renderTiles($draw);
+    private function renderAll(): void {
+        $this->draw->clear();
+        $this->renderTiles();
         $this->renderPortal();
-        $this->renderEnemies($draw);
-        $this->renderPlayer($draw);
-        $this->world_event_log_renderer->render();
-        $this->status_renderer->render($this->world->player, $this->world->stage);
+        $this->renderEnemies();
+        $this->renderPlayer();
+        $this->info_panel_renderer->render($this->world);
+        $this->renderRestartMenu();
         $this->renderAnimations();
-        if ($this->defeat) {
-            $this->renderRestartMenu();
-        }
-        $draw->present();
+        $this->renderOnPortal();
+        $this->draw->present();
     }
 
     /**
@@ -428,7 +440,7 @@ class GameScene {
         $draw_rect->x = $tile_offset_x * GlobalConfig::TILE_WIDTH;
         $draw_rect->y = $tile_offset_y * GlobalConfig::TILE_HEIGHT;
 
-        $tile = $this->world->getTile($row, $col);
+        $tile        = $this->world->getTile($row, $col);
         $draw_pos    = $this->sdl->newRect();
         $draw_pos->w = $draw_rect->w;
         $draw_pos->h = $draw_rect->h;
@@ -441,22 +453,25 @@ class GameScene {
     }
 
     private function renderPortal(): void {
+        if ($this->world->stage >= 3) {
+            return;
+        }
         $tile = $this->world->tiles[$this->world->portal_pos];
         if ($tile->revealed) {
             $this->renderOneTile($this->portal_texture, $tile->row, $tile->col);
         }
-        if ($this->world->getTile($tile->row, $tile->col+1)->revealed) {
-            $this->renderOneTile($this->portal_texture, $tile->row, $tile->col+1, 1);
+        if ($this->world->getTile($tile->row, $tile->col + 1)->revealed) {
+            $this->renderOneTile($this->portal_texture, $tile->row, $tile->col + 1, 1);
         }
-        if ($this->world->getTile($tile->row+1, $tile->col)->revealed) {
-            $this->renderOneTile($this->portal_texture, $tile->row+1, $tile->col, 0, 1);
+        if ($this->world->getTile($tile->row + 1, $tile->col)->revealed) {
+            $this->renderOneTile($this->portal_texture, $tile->row + 1, $tile->col, 0, 1);
         }
-        if ($this->world->getTile($tile->row+1, $tile->col+1)->revealed) {
-            $this->renderOneTile($this->portal_texture, $tile->row+1, $tile->col+1, 1, 1);
+        if ($this->world->getTile($tile->row + 1, $tile->col + 1)->revealed) {
+            $this->renderOneTile($this->portal_texture, $tile->row + 1, $tile->col + 1, 1, 1);
         }
     }
 
-    private function renderTiles(Renderer $draw): void {
+    private function renderTiles(): void {
         $tile_rect    = $this->sdl->newRect();
         $tile_rect->w = GlobalConfig::TILE_WIDTH;
         $tile_rect->h = GlobalConfig::TILE_HEIGHT;
@@ -481,31 +496,30 @@ class GameScene {
             }
             $tile_pos->x = $tile->col * $tile_rect->w;
             $tile_pos->y = $tile->row * $tile_rect->h;
-            if (!$draw->copy($this->tileset_texture, \FFI::addr($tile_rect), \FFI::addr($tile_pos))) {
+            if (!$this->draw->copy($this->tileset_texture, \FFI::addr($tile_rect), \FFI::addr($tile_pos))) {
                 throw new RuntimeException($this->sdl->getError());
             }
         }
     }
 
-    private function renderPlayer(Renderer $draw): void {
-        $this->renderUnit($draw, $this->world->player);
+    private function renderPlayer(): void {
+        $this->renderUnit($this->world->player);
     }
 
-    private function renderEnemies(Renderer $draw) {
+    private function renderEnemies() {
         foreach ($this->dead_enemies as $unit) {
             if ($this->world->tiles[$unit->pos]->revealed) {
-                $this->renderUnit($draw, $unit);
+                $this->renderUnit($unit);
             }
         }
-
         foreach ($this->world->enemies as $unit) {
             if ($this->world->tiles[$unit->pos]->revealed) {
-                $this->renderUnit($draw, $unit);
+                $this->renderUnit($unit);
             }
         }
     }
 
-    private function renderUnit(Renderer $draw, Unit $unit) {
+    private function renderUnit(Unit $unit) {
         $tile_rect    = $this->sdl->newRect();
         $tile_rect->w = GlobalConfig::TILE_WIDTH;
         $tile_rect->h = 48;
@@ -527,16 +541,28 @@ class GameScene {
             $texture = $this->orc_texture;
         }
 
-        if (!$draw->copy($texture, \FFI::addr($tile_rect), \FFI::addr($render_pos))) {
+        if (!$this->draw->copy($texture, \FFI::addr($tile_rect), \FFI::addr($render_pos))) {
             throw new RuntimeException($this->sdl->getError());
         }
     }
 
+    private function renderOnPortal() {
+        if ($this->world->player->on_portal) {
+            $this->is_modal_window = true;
+            $stage                 = $this->world->stage;
+            $text                  = ["You find entrance to $stage stage", 'Do you want to go now? [y/n]'];
+            $this->text_block_renderer->render($text, $this->font, $this->colors->white, $this->colors->black);
+        }
+    }
+
     private function renderRestartMenu() {
-        $text       = [
-            "Game Over",
-            "Restart? [y/n]",
-        ];
-        $this->text_block_renderer->render($text, $this->font, $this->colors->red, $this->colors->black);
+        if ($this->defeat) {
+            $this->is_modal_window = true;
+            $text                  = [
+                "Game Over",
+                "Restart? [y/n]",
+            ];
+            $this->text_block_renderer->render($text, $this->font, $this->colors->red, $this->colors->black);
+        }
     }
 }

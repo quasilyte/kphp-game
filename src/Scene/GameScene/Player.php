@@ -8,6 +8,7 @@ class Player extends Unit {
     public int $exp;
     public int $next_level_exp;
     public SpellBook $spellbook;
+    public bool $on_portal;
 
     public function __construct() {
         $this->hp             = 50;
@@ -18,6 +19,7 @@ class Player extends Unit {
         $this->exp            = 0;
         $this->level          = 1;
         $this->next_level_exp = (1 << $this->level + 2);
+        $this->on_portal = false;
 
         $this->spellbook = new SpellBook();
     }

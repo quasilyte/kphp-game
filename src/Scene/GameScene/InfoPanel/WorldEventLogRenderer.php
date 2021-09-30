@@ -34,17 +34,17 @@ class WorldEventLogRenderer {
 
     /**
      * @param ffi_cdata<sdl, struct SDL_Renderer*> $renderer
+     * @param ffi_cdata<sdl, struct SDL_Rect> $rect
      * @param ffi_cdata<sdl_ttf, struct TTF_Font*> $font
      */
-    public function __construct(SDL $sdl, $renderer, Renderer $draw, $font, Color $text_color) {
+    public function __construct(SDL $sdl, $renderer, Renderer $draw, $rect, $font, Color $text_color) {
         $this->sdl        = $sdl;
         $this->renderer   = $renderer;
         $this->draw       = $draw;
         $this->font       = $font;
         $this->text_color = $text_color;
-        $this->rect       = $sdl->newRect();
-        $this->rect->x    = GlobalConfig::UI_OFFSET + GlobalConfig::TEXT_MARGIN;
-        $this->rect->y    = self::defaultRectY();
+        $this->rect       = $rect;
+        $this->rect->x    = GlobalConfig::INFO_PANEL_OFFSET + GlobalConfig::TEXT_MARGIN;
     }
 
     public function add_event(WorldEvent $event) {
@@ -59,14 +59,15 @@ class WorldEventLogRenderer {
         if (empty($this->events)) {
             return;
         }
+        $this->rect->y = self::defaultRectY();
         for ($i = 0; $i < count($this->events); $i++) {
-            $raw_text = (string)$this->events[$i];
-            $split_text        = explode("\n", $raw_text);
+            $raw_text   = (string)$this->events[$i];
+            $split_text = explode("\n", $raw_text);
             for ($x = 0; $x < count($split_text); $x++) {
                 $text = (string)$split_text[$x];
                 if ($x === 0) {
                     $text = '* ' . $text;
-                } elseif(count($split_text) > 1) {
+                } elseif (count($split_text) > 1) {
                     $text = '    ' . $text;
                 }
 
@@ -91,11 +92,9 @@ class WorldEventLogRenderer {
                 $this->sdl->destroyTexture($msg_texture);
             }
         }
-        $this->rect->y = self::defaultRectY();
     }
 
-    private
-    static function defaultRectY(): int {
+    private static function defaultRectY(): int {
         return GlobalConfig::WINDOW_HEIGHT - 512 + GlobalConfig::TEXT_MARGIN;
     }
 }
