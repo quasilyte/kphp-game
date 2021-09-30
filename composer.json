@@ -1,0 +1,24 @@
+{
+    "name": "quasilyte/kphp-game",
+    "description": "Simple KPHP game, a proof of concept thing",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Iskander Sharipov",
+            "email": "quasilyte@gmail.com"
+        },
+        {
+            "name": "Vladislav Senin",
+            "email": "troy4eg@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "KPHPGame\\": "src/"
+        }
+    }
+}
