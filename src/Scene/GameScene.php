@@ -170,16 +170,6 @@ class GameScene {
     private function updateRevealedTiles(): void {
         $tile = $this->world->getPlayerTile();
 
-        // -2 -2
-        // 0 +2
-        // +2 0
-        // +2 +2
-        // -+++-
-        // +++++
-        // +++++
-        // +++++
-        // -+++-
-
         for ($delta_row = -2; $delta_row <= 2; $delta_row++) {
             for ($delta_col = -2; $delta_col <= 2; $delta_col++) {
                 if ($delta_row === -2 && $delta_col === -2) {
