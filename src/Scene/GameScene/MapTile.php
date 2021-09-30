@@ -11,4 +11,5 @@ class MapTile {
     public $pos = 0;
     public $col = 0;
     public $row = 0;
+    public $revealed = false;
 }

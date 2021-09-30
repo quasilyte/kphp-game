@@ -70,6 +70,8 @@ class GameScene {
 
         Logger::info('starting GameScene event loop');
 
+        $this->updateRevealedTiles();
+
         $event = $this->sdl->newEvent();
         while (true) {
             $this->processEvents($event);
@@ -159,7 +161,45 @@ class GameScene {
             if ($this->world->getTile($tile->row + $delta_row, $tile->col + $delta_col)->kind !== MapTile::WALL) {
                 $player->pos = $this->world->getTile($tile->row + $delta_row, $tile->col + $delta_col)->pos;
             }
+            // Player moved, update visibility.
+            $this->updateRevealedTiles();
             return;
+        }
+    }
+
+    private function updateRevealedTiles(): void {
+        $tile = $this->world->getPlayerTile();
+
+        // -2 -2
+        // 0 +2
+        // +2 0
+        // +2 +2
+        // -+++-
+        // +++++
+        // +++++
+        // +++++
+        // -+++-
+
+        for ($delta_row = -2; $delta_row <= 2; $delta_row++) {
+            for ($delta_col = -2; $delta_col <= 2; $delta_col++) {
+                if ($delta_row === -2 && $delta_col === -2) {
+                    continue;
+                }
+                if ($delta_row === -2 && $delta_col === +2) {
+                    continue;
+                }
+                if ($delta_row === +2 && $delta_col === -2) {
+                    continue;
+                }
+                if ($delta_row === +2 && $delta_col === +2) {
+                    continue;
+                }
+                $row = $tile->row + $delta_row;
+                $col = $tile->col + $delta_col;
+                if ($col >= 0 && $row >= 0 && $col < $this->world->map_cols && $row < $this->world->map_rows) {
+                    $this->world->getTile($row, $col)->revealed = true;
+                }
+            }
         }
     }
 
@@ -173,6 +213,9 @@ class GameScene {
         $tile_pos->h = $tile_rect->h;
 
         foreach ($this->world->tiles as $tile) {
+            if (!$tile->revealed) {
+                continue;
+            }
             if ($tile->kind === MapTile::EMPTY) {
                 $tile_rect->x = ($tile->tileset_index * $tile_rect->w);
                 $tile_rect->y = 0;
