@@ -17,6 +17,9 @@ kphp-game/
 ```
 
 ```bash
+# Install/update KPHP sdlite library
+make update-sdlite
+
 # If successfull, game binary can be found at ./bin/game
 $ make game
 ```
