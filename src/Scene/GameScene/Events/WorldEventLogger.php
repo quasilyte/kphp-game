@@ -4,6 +4,7 @@ namespace KPHPGame\Scene\GameScene\Events;
 
 // Contains the events log scene state.
 // Moves, attacks and etc
+use KPHPGame\GlobalConfig;
 use KPHPGame\Logger;
 use KPHPGame\Person;
 use Quasilyte\SDLite\Color;
@@ -63,15 +64,14 @@ class WorldEventLogger {
     }
 
     public function render() {
-        Logger::info('EventLogger::render');
         $text = implode('\n', $this->events);
 
         $msg_surf  = $this->sdl->renderTextBlended($this->font, $text, $this->text_color);
         $msg_sizes = $this->sdl->sizeUTF8($this->font, $text);
 
         $msg_rect    = $this->sdl->newRect();
-        $msg_rect->x = 100;
-        $msg_rect->y = 100;
+        $msg_rect->x = GlobalConfig::WINDOW_WIDTH - 1024;
+        $msg_rect->y = GlobalConfig::WINDOW_HEIGHT - 512;
         $msg_rect->w = $msg_sizes[0]; // controls the width of the rect
         $msg_rect->h = $msg_sizes[1]; // controls the height of the rect
         $msg_text = $this->sdl->createTextureFromSurface($this->renderer, $msg_surf);

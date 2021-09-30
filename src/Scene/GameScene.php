@@ -17,7 +17,7 @@ use Quasilyte\SDLite\SDL;
 class GameScene {
     public function __construct(SDL $sdl) {
         $this->sdl  = $sdl;
-        $this->font = $sdl->openFont(AssetsManager::font('arbor'), 20);
+        $this->font = $sdl->openFont(AssetsManager::font('arbor'), GlobalConfig::FONT_SIZE);
     }
 
     public function run() {
