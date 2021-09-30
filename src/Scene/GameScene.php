@@ -40,6 +40,8 @@ class GameScene {
     /** @var ffi_cdata<sdl, struct SDL_Texture*> */
     private $tileset_texture;
     /** @var ffi_cdata<sdl, struct SDL_Texture*> */
+    private $portal_texture;
+    /** @var ffi_cdata<sdl, struct SDL_Texture*> */
     private $player_texture;
     /** @var ffi_cdata<sdl, struct SDL_Texture*> */
     private $orc_texture;
@@ -132,6 +134,16 @@ class GameScene {
             throw new RuntimeException($this->sdl->getError());
         }
         $this->orc_texture = $this->sdl->createTextureFromSurface($this->sdl_renderer, $surface);
+        if (\FFI::isNull($this->player_texture)) {
+            throw new RuntimeException($this->sdl->getError());
+        }
+        $this->sdl->freeSurface($surface);
+
+        $surface = $this->sdl->imgLoad(AssetsManager::tile("portal.png"));
+        if (\FFI::isNull($surface)) {
+            throw new RuntimeException($this->sdl->getError());
+        }
+        $this->portal_texture = $this->sdl->createTextureFromSurface($this->sdl_renderer, $surface);
         if (\FFI::isNull($this->player_texture)) {
             throw new RuntimeException($this->sdl->getError());
         }
@@ -295,6 +307,7 @@ class GameScene {
     private function renderAll(Renderer $draw): void {
         $draw->clear();
         $this->renderTiles($draw);
+        $this->renderPortal();
         $this->renderPlayer($draw);
         $this->renderEnemies($draw);
         $this->world_event_logger->render();
@@ -303,6 +316,23 @@ class GameScene {
             $this->renderRestartMenu();
         }
         $draw->present();
+    }
+
+    private function renderPortal(): void {
+        $draw_rect    = $this->sdl->newRect();
+        $draw_rect->w = GlobalConfig::TILE_WIDTH * 2;
+        $draw_rect->h = GlobalConfig::TILE_HEIGHT * 2;
+
+        $tile = $this->world->tiles[$this->world->portal_pos];
+        $draw_pos    = $this->sdl->newRect();
+        $draw_pos->w = $draw_rect->w;
+        $draw_pos->h = $draw_rect->h;
+        $draw_pos->x = $tile->col * GlobalConfig::TILE_WIDTH;
+        $draw_pos->y = $tile->row * GlobalConfig::TILE_HEIGHT;
+
+        if (!$this->draw->copy($this->portal_texture, \FFI::addr($draw_rect), \FFI::addr($draw_pos))) {
+            throw new RuntimeException($this->sdl->getError());
+        }
     }
 
     private function renderTiles(Renderer $draw): void {
@@ -318,7 +348,7 @@ class GameScene {
             if (!$tile->revealed) {
                 continue;
             }
-            if ($tile->kind === MapTile::EMPTY) {
+            if ($tile->kind === MapTile::PORTAL || $tile->kind === MapTile::EMPTY) {
                 $tile_rect->x = ($tile->tileset_index * $tile_rect->w);
                 $tile_rect->y = 0;
             } elseif ($tile->kind === MapTile::WALL) {

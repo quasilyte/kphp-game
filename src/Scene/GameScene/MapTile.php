@@ -6,6 +6,7 @@ class MapTile {
     public const EMPTY = 0;
     public const WALL  = 1;
     public const ROCK  = 2;
+    public const PORTAL = 3;
 
     public $kind = self::EMPTY;
     public $tileset_index = 0;

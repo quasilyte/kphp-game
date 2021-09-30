@@ -32,8 +32,10 @@ class WorldGenerator {
         $world->map_cols = $num_cols;
         $world->map_rows = $num_rows;
 
-        $world->player->pos = $world->getTile(2, 2)->pos;
+        // TODO: random player deployment.
+        $world->player->pos = $world->getTile(3, 3)->pos;
 
+        // TODO: spawn random enemies and random places.
         $orc = new Enemy('Orc');
         $orc->pos = $world->player->pos + 4;
         $world->enemies[] = $orc;
@@ -83,5 +85,22 @@ class WorldGenerator {
                 break; // OK
             }
         }
+
+        // TODO: random deployment of portal.
+        // Note: all 4 tiles where we put this portal should be free (MapTile::EMPTY).
+        self::deployPortal($world, $world->getTile(1, 1)->pos);
+    }
+
+    // Portal occupies 4 tiles, starting from top-left tile at $pos.
+    // All tiles become MapTile::PORTAL.
+    private static function deployPortal(World $world, int $pos): void {
+        $world->portal_pos = $pos;
+
+        $row = $world->tiles[$pos]->row;
+        $col = $world->tiles[$pos]->col;
+        $world->getTile($row, $col)->kind = MapTile::PORTAL;
+        $world->getTile($row, $col+1)->kind = MapTile::PORTAL;
+        $world->getTile($row+1, $col)->kind = MapTile::PORTAL;
+        $world->getTile($row+1, $col+1)->kind = MapTile::PORTAL;
     }
 }

@@ -13,6 +13,8 @@ class World {
 
     public Player $player;
 
+    public int $portal_pos = 0;
+
     /** @var Enemy[] */
     public $enemies;
 
