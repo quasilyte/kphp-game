@@ -9,4 +9,5 @@ class PlayerAction {
     public const MOVE_DOWN  = 2;
     public const MOVE_LEFT  = 3;
     public const MOVE_RIGHT = 4;
+    public const ATTACK     = 5;
 }

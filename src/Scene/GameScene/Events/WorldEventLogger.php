@@ -6,25 +6,29 @@ namespace KPHPGame\Scene\GameScene\Events;
 // Moves, attacks and etc
 use KPHPGame\GlobalConfig;
 use KPHPGame\Logger;
-use KPHPGame\Person;
 use Quasilyte\SDLite\Color;
 use Quasilyte\SDLite\Renderer;
 use Quasilyte\SDLite\SDL;
 
 class WorldEventLogger {
-    /**
-     * @var string[]
-     */
+
+    /** @var string[] */
     private array $events;
 
     private SDL $sdl;
+
     private Renderer $draw;
 
     /** @var ffi_cdata<sdl, struct SDL_Renderer*> */
     private $renderer;
+
     /** @var ffi_cdata<sdl_ttf, struct TTF_Font*> */
     private $font;
-    private $text_color;
+
+    private Color $text_color;
+
+    /** @var ffi_cdata<sdl, struct SDL_Rect> */
+    private $rect;
 
     /**
      * @param ffi_cdata<sdl, struct SDL_Renderer*> $renderer
@@ -36,55 +40,60 @@ class WorldEventLogger {
         $this->draw       = $draw;
         $this->font       = $font;
         $this->text_color = new Color(255, 255, 255);
-    }
-
-    /**
-     * @return WorldEvent[]
-     */
-    public static function gen_test_data() {
-        $player  = Person::create("player1");
-        $monster = Person::create("monster1");
-        return [
-            MoveWorldEvent::create($player, "up"),
-            MoveWorldEvent::create($monster, "down"),
-            AttackWorldEvent::create($player, $monster, 5),
-            AttackWorldEvent::create($player, $monster, 10),
-            DieWorldEvent::create($monster),
-        ];
+        $this->rect       = $sdl->newRect();
+        $this->rect->x    = GlobalConfig::UI_OFFSET + GlobalConfig::TEXT_MARGIN;
+        $this->rect->y    = self::defaultRectY();
     }
 
     public function add_event(WorldEvent $event) {
         $event_str = '' . $event;
-        Logger::info('Add event: ' . $event_str);
-
         array_push($this->events, $event_str);
-        if (count($this->events) > 5) {
-            array_pop($this->events);
+        if (count($this->events) > 14) {
+            array_shift($this->events);
         }
     }
 
     public function render() {
-        $text = implode('\n', $this->events);
+        if (empty($this->events)) {
+            return;
+        }
+        for ($i = 0; $i < count($this->events); $i++) {
+            $raw_text = (string)$this->events[$i];
+            $split_text        = explode("\n", $raw_text);
+            for ($x = 0; $x < count($split_text); $x++) {
+                $text = (string)$split_text[$x];
+                if ($x === 0) {
+                    $text = '* ' . $text;
+                } elseif(count($split_text) > 1) {
+                    $text = '    ' . $text;
+                }
 
-        $msg_surf  = $this->sdl->renderTextBlended($this->font, $text, $this->text_color);
-        if (\FFI::isNull($msg_surf)) {
-            throw new \RuntimeException($this->sdl->getError());
-        }
-        $msg_sizes = $this->sdl->sizeUTF8($this->font, $text);
+                $msg_surface = $this->sdl->renderUTF8Blended($this->font, $text, $this->text_color);
+                if (\FFI::isNull($msg_surface)) {
+                    throw new \RuntimeException($this->sdl->getError());
+                }
+                $msg_sizes = $this->sdl->sizeUTF8($this->font, $text);
 
-        $msg_rect    = $this->sdl->newRect();
-        $msg_rect->x = GlobalConfig::UI_OFFSET;
-        $msg_rect->y = GlobalConfig::WINDOW_HEIGHT - 512;
-        $msg_rect->w = $msg_sizes[0]; // controls the width of the rect
-        $msg_rect->h = $msg_sizes[1]; // controls the height of the rect
-        $msg_text    = $this->sdl->createTextureFromSurface($this->renderer, $msg_surf);
-        if (\FFI::isNull($msg_text)) {
-            throw new \RuntimeException($this->sdl->getError());
+                $msg_texture = $this->sdl->createTextureFromSurface($this->renderer, $msg_surface);
+                if (\FFI::isNull($msg_texture)) {
+                    throw new \RuntimeException($this->sdl->getError());
+                }
+                $this->rect->w = $msg_sizes[0];
+                $this->rect->h = $msg_sizes[1];
+                $this->rect->y = $this->rect->y + $this->rect->h + 5;
+
+                $this->sdl->freeSurface($msg_surface);
+                if (!$this->draw->copy($msg_texture, null, \FFI::addr($this->rect))) {
+                    throw new \RuntimeException($this->sdl->getError());
+                }
+                $this->sdl->destroyTexture($msg_texture);
+            }
         }
-        $this->sdl->freeSurface($msg_surf);
-        if (!$this->draw->copy($msg_text, null, \FFI::addr($msg_rect))) {
-            throw new \RuntimeException($this->sdl->getError());
-        }
-        $this->sdl->destroyTexture($msg_text);
+        $this->rect->y = self::defaultRectY();
+    }
+
+    private
+    static function defaultRectY(): int {
+        return GlobalConfig::WINDOW_HEIGHT - 512 + GlobalConfig::TEXT_MARGIN;
     }
 }

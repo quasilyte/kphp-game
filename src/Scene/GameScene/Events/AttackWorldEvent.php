@@ -21,6 +21,6 @@ class AttackWorldEvent implements WorldEvent {
     }
 
     public function __toString(): string {
-        return "The " . $this->who->getName() . " deals $this->damage damage to the " . $this->whom->getName();
+        return $this->who->getName() . " deals $this->damage damage\nto the " . $this->whom->getName();
     }
 }

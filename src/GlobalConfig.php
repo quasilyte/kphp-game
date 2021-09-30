@@ -9,7 +9,8 @@ class GlobalConfig {
     public const WINDOW_WIDTH  = 1366;
     public const WINDOW_HEIGHT = 768;
 
-    public const UI_OFFSET = 1024;
+    public const UI_OFFSET   = 1024;
+    public const TEXT_MARGIN = 25;
 
     public const FONT_SIZE = 20;
 

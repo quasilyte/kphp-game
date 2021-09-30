@@ -7,6 +7,9 @@ use KPHPGame\GlobalConfig;
 use KPHPGame\Logger;
 use KPHPGame\Scene\GameScene\Direction;
 use KPHPGame\Scene\GameScene\Enemy;
+use KPHPGame\Person;
+use KPHPGame\Scene\GameScene\Events\AttackWorldEvent;
+use KPHPGame\Scene\GameScene\Events\MoveWorldEvent;
 use KPHPGame\Scene\GameScene\Events\WorldEventLogger;
 use KPHPGame\Scene\GameScene\MapTile;
 use KPHPGame\Scene\GameScene\PlayerAction;
@@ -41,7 +44,7 @@ class GameScene {
 
     public function __construct(SDL $sdl) {
         $this->sdl  = $sdl;
-        $this->font = $sdl->openFont(AssetsManager::font('arbor'), GlobalConfig::FONT_SIZE);
+        $this->font = $sdl->openFont(AssetsManager::font('FreeMono'), GlobalConfig::FONT_SIZE);
     }
 
     public function run() {
@@ -62,10 +65,6 @@ class GameScene {
         $this->world = new World();
         WorldGenerator::generate($this->world);
         $this->world_event_logger = new WorldEventLogger($this->sdl, $this->sdl_renderer,  $draw, $this->font);
-        $test_log_data            = WorldEventLogger::gen_test_data();
-        foreach ($test_log_data as $log_event) {
-            $this->world_event_logger->add_event($log_event);
-        }
 
         Logger::info('rendering world');
 
@@ -84,6 +83,7 @@ class GameScene {
 
             $this->processPlayerAction();
 
+            $draw->clear();
             $this->renderTiles($draw);
             $this->renderPlayer($draw);
             $this->renderEnemies($draw);
@@ -146,6 +146,8 @@ class GameScene {
                         $this->player_action = PlayerAction::MOVE_LEFT;
                     } elseif ($scancode === Scancode::RIGHT) {
                         $this->player_action = PlayerAction::MOVE_RIGHT;
+                    } elseif ($scancode === Scancode::SPACE) {
+                        $this->player_action = PlayerAction::ATTACK;
                     }
                     break;
             }
@@ -158,18 +160,26 @@ class GameScene {
 
         $delta_col = 0;
         $delta_row = 0;
+        $person = Person::create("Varian");
+        $monster = Person::create("Some Ork");
         if ($this->player_action === PlayerAction::MOVE_UP) {
             $delta_row = -1;
             $player->rotation = Direction::UP;
+            $this->world_event_logger->add_event(MoveWorldEvent::create($person, PlayerAction::MOVE_UP));
         } elseif ($this->player_action === PlayerAction::MOVE_DOWN) {
             $delta_row = +1;
             $player->rotation = Direction::DOWN;
+            $this->world_event_logger->add_event(MoveWorldEvent::create($person, PlayerAction::MOVE_DOWN));
         } elseif ($this->player_action === PlayerAction::MOVE_LEFT) {
             $delta_col = -1;
             $player->rotation = Direction::LEFT;
+            $this->world_event_logger->add_event(MoveWorldEvent::create($person, PlayerAction::MOVE_LEFT));
         } elseif ($this->player_action === PlayerAction::MOVE_RIGHT) {
             $delta_col = +1;
             $player->rotation = Direction::RIGHT;
+            $this->world_event_logger->add_event(MoveWorldEvent::create($person, PlayerAction::MOVE_RIGHT));
+        } elseif ($this->player_action === PlayerAction::ATTACK) {
+            $this->world_event_logger->add_event(AttackWorldEvent::create($person, $monster, rand(0, 10)));
         }
         if ($delta_col !== 0 || $delta_row !== 0) {
             if ($this->world->getTile($tile->row + $delta_row, $tile->col + $delta_col)->kind !== MapTile::WALL) {
