@@ -2,6 +2,7 @@
 
 namespace KPHPGame;
 
+use KPHPGame\Scene\GameScene;
 use Quasilyte\SDLite\SDL;
 
 class Game {
@@ -24,6 +25,8 @@ class Game {
   }
 
   public function run(): void {
+    $game_scene = new GameScene($this->sdl);
+    $game_scene->run();
   }
 
   /** @var SDL */
