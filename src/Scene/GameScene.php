@@ -5,13 +5,11 @@ namespace KPHPGame\Scene;
 use KPHPGame\AssetsManager;
 use KPHPGame\GlobalConfig;
 use KPHPGame\Logger;
-use KPHPGame\Person;
 use KPHPGame\Scene\GameScene\Direction;
 use KPHPGame\Scene\GameScene\Enemy;
-use KPHPGame\Scene\GameScene\Events\AttackWorldEvent;
-use KPHPGame\Scene\GameScene\Events\DieWorldEvent;
-use KPHPGame\Scene\GameScene\Events\MoveWorldEvent;
-use KPHPGame\Scene\GameScene\Events\WorldEventLogger;
+use KPHPGame\Scene\GameScene\InfoPanel\Events\AttackWorldEvent;
+use KPHPGame\Scene\GameScene\InfoPanel\Events\DieWorldEvent;
+use KPHPGame\Scene\GameScene\InfoPanel\WorldEventLogRenderer;
 use KPHPGame\Scene\GameScene\MapTile;
 use KPHPGame\Scene\GameScene\PlayerAction;
 use KPHPGame\Scene\GameScene\InfoPanel\StatusRenderer;
@@ -34,7 +32,7 @@ class GameScene {
     /** @var ffi_cdata<sdl, struct SDL_Window*> */
     private $sdl_window;
     private SDL $sdl;
-    private WorldEventLogger $world_event_logger;
+    private WorldEventLogRenderer $world_event_logger;
     private StatusRenderer $status_renderer;
     /** $var ffi_cdata<sdl_ttf, struct TTF_Font*> */
     private $font;
@@ -71,7 +69,7 @@ class GameScene {
         Logger::info('generating world');
         $this->world = new World();
         WorldGenerator::generate($this->world);
-        $this->world_event_logger = new WorldEventLogger($this->sdl, $this->sdl_renderer, $draw, $this->font);
+        $this->world_event_logger = new WorldEventLogRenderer($this->sdl, $this->sdl_renderer, $draw, $this->font);
         $this->status_renderer    = new StatusRenderer($this->sdl, $this->sdl_renderer, $draw, $this->font);
 
         Logger::info('rendering world');

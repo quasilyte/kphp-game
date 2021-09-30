@@ -1,16 +1,16 @@
 <?php
 
-namespace KPHPGame\Scene\GameScene\Events;
+namespace KPHPGame\Scene\GameScene\InfoPanel;
 
 // Contains the events log scene state.
 // Moves, attacks and etc
 use KPHPGame\GlobalConfig;
-use KPHPGame\Logger;
+use KPHPGame\Scene\GameScene\InfoPanel\Events\WorldEvent;
 use Quasilyte\SDLite\Color;
 use Quasilyte\SDLite\Renderer;
 use Quasilyte\SDLite\SDL;
 
-class WorldEventLogger {
+class WorldEventLogRenderer {
 
     /** @var string[] */
     private array $events;

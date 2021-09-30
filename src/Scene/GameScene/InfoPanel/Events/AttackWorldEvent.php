@@ -1,8 +1,7 @@
 <?php
 
-namespace KPHPGame\Scene\GameScene\Events;
+namespace KPHPGame\Scene\GameScene\InfoPanel\Events;
 
-use KPHPGame\Person;
 use KPHPGame\Scene\GameScene\Unit;
 
 class AttackWorldEvent implements WorldEvent {

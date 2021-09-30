@@ -1,6 +1,6 @@
 <?php
 
-namespace KPHPGame\Scene\GameScene\Events;
+namespace KPHPGame\Scene\GameScene\InfoPanel\Events;
 
 use KPHPGame\Scene\GameScene\Unit;
 
