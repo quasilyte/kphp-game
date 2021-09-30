@@ -175,6 +175,12 @@ class GameScene {
                     } elseif ($scancode === Scancode::Y) {
                         $this->initWorld();
                         $this->renderAll($this->draw);
+                    } else if ($scancode === Scancode::Q) {
+                        $this->player_action = PlayerAction::MAGIC_FIREBALL;
+                    } else if ($scancode === Scancode::W) {
+                        $this->player_action = PlayerAction::MAGIC_THUNDER;
+                    } else if ($scancode === Scancode::E) {
+                        $this->player_action = PlayerAction::MAGIC_THUNDER;
                     }
                     break;
             }
