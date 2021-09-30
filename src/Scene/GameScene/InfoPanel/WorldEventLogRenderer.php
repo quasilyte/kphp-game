@@ -12,6 +12,8 @@ use Quasilyte\SDLite\SDL;
 
 class WorldEventLogRenderer {
 
+    private const MAX_EVENT_COUNT = 9;
+
     /** @var string[] */
     private array $events;
 
@@ -48,7 +50,7 @@ class WorldEventLogRenderer {
     public function add_event(WorldEvent $event) {
         $event_str = '' . $event;
         array_push($this->events, $event_str);
-        if (count($this->events) > 14) {
+        if (count($this->events) > self::MAX_EVENT_COUNT) {
             array_shift($this->events);
         }
     }
