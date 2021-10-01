@@ -61,3 +61,11 @@ Controls:
 * `Esc` - exit game
 * `y` (when asked) - accept
 * `n` (when asked) - decline
+
+## Credits
+
+This game uses some sounds and artworks from existing video games.
+
+All assets keep their original copyright and can't be considered to be MIT-licensed.
+
+The authors of this game have no copyrights of these assets.

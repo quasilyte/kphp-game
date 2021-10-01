@@ -82,6 +82,8 @@ class GameScene {
     private $ice_shard_hit_sound;
     /** @var ffi_cdata<sdl_mixer, struct Mix_Chunk*> */
     private $thunder_cast_sound;
+    /** @var ffi_cdata<sdl_mixer, struct Mix_Chunk*> */
+    private $level_up_sound;
     private bool $escape = false;
     private bool $defeat = false;
     private bool $is_modal_window = false;
@@ -187,6 +189,7 @@ class GameScene {
         $this->ice_shard_cast_sound = $this->loadOneSound(AssetsManager::sound('ice_shard_cast.wav'));
         $this->ice_shard_hit_sound = $this->loadOneSound(AssetsManager::sound('ice_shard_hit.wav'));
         $this->thunder_cast_sound = $this->loadOneSound(AssetsManager::sound('thunder_cast.wav'));
+        $this->level_up_sound = $this->loadOneSound(AssetsManager::sound('level_up.wav'));
     }
 
     private function loadTextures(): void {
@@ -471,6 +474,9 @@ class GameScene {
 
     private function addPlayerExp(int $exp) {
         $gained_levels = $this->world->player->addExp($exp);
+        if ($gained_levels !== 0) {
+            $this->playSFX($this->level_up_sound);
+        }
         for ($i = 0; $i < $gained_levels; $i++) {
             $this->info_panel_renderer->add_event(LevelUpWorldEvent::create($this->world->player));
         }
