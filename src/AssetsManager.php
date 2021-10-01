@@ -28,11 +28,11 @@ class AssetsManager {
 
     private static function getRootByTarget(): string {
 //        $target = @ini_get('target');
-        return "./../Resources/";
+//        return "./../Resources/";
 //        switch ($target) {
 //            case null:
 //            case false:
-//                return __DIR__ . "/../assets/";
+                return __DIR__ . "/../assets/";
 //            case "macos":
 //                return "./../Resources/";
 //            case "linux":
