@@ -258,6 +258,10 @@ class GameScene {
     /** @var ffi_cdata<sdl_mixer, struct Mix_Chunk*> $resource */
     private function playSFX($resource) {
         if (!$this->sdl->playChannel(-1, $resource, 0)) {
+            if ($this->sdl->getError() === 'No free channels available') {
+                Logger::info('trying to play too many sounds at once');
+                return;
+            }
             throw new \RuntimeException($this->sdl->getError());
         }
     }
