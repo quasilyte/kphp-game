@@ -42,6 +42,10 @@ class Game {
             throw new RuntimeException("init SDL: " . $this->sdl->getError());
         }
 
+        if (!$this->sdl->openAudio(22050, SDL::AUDIO_S16LSB, 2, 4096)) {
+            throw new RuntimeException("init audio: " . $this->sdl->getError());
+        }
+
         $this->colors     = new Colors();
         $this->font       = $this->sdl->openFont(AssetsManager::font('FreeMono'), GlobalConfig::FONT_SIZE);
         $this->sdl_window = $this->sdl->createWindow(

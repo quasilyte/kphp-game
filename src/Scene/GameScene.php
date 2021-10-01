@@ -92,6 +92,14 @@ class GameScene {
 
         $this->loadTextures();
 
+        $music = $this->sdl->loadMusic(AssetsManager::sound("music.mp3"));
+        if (\FFI::isNull($music)) {
+            throw new \RuntimeException($this->sdl->getError());
+        }
+        if (!$this->sdl->playMusic($music)) {
+            throw new \RuntimeException($this->sdl->getError());
+        }
+
         Logger::info('starting GameScene event loop');
         $this->renderAll();
 

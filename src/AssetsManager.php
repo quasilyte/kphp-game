@@ -6,6 +6,10 @@ namespace KPHPGame;
 // installed game.
 
 class AssetsManager {
+    public static function sound(string $name): string {
+        return __DIR__ . "/../assets/sounds/$name";
+    }
+
     public static function unit(string $name): string {
         return __DIR__ . "/../assets/units/$name";
     }

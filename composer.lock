@@ -12,7 +12,7 @@
             "dist": {
                 "type": "path",
                 "url": "./packages/kphp-sdlite",
-                "reference": "09e5bf500154b5b719bef9a64ecf5cd37e30193f"
+                "reference": "2355570e0b4d8fbe73a0ff68dffd08f2bdbf0dac"
             },
             "require": {
                 "php": ">=7.4"
