@@ -60,6 +60,8 @@ class GameScene {
     private $ogre_texture;
     /** @var ffi_cdata<sdl, struct SDL_Texture*> */
     private $thunder_effect_texture;
+    /** @var ffi_cdata<sdl, struct SDL_Texture*> */
+    private $fireball_effect_texture;
     private bool $escape = false;
     private bool $defeat = false;
     private bool $is_modal_window = false;
@@ -157,6 +159,7 @@ class GameScene {
         $this->goblin_texture = $this->loadOneTexture(AssetsManager::unit("Goblin.png"));
         $this->ogre_texture = $this->loadOneTexture(AssetsManager::unit("Ogre.png"));
         $this->thunder_effect_texture = $this->loadOneTexture(AssetsManager::magic("thunder_effect.png"));
+        $this->fireball_effect_texture = $this->loadOneTexture(AssetsManager::magic("fireball_effect.png"));
     }
 
     /** @param ffi_cdata<sdl, struct SDL_Event> $event */
@@ -209,6 +212,47 @@ class GameScene {
         }
     }
 
+    private function castFireball(): void {
+        $world = $this->world;
+        $player = $world->player;
+        $tile = $world->getPlayerTile();
+        $tile = $world->calculateStepTile($tile, $player->direction);
+        $dist = 3;
+        /** @var Enemy $target */
+        $target = null;
+        while (true) {
+            if ($dist === 0) {
+                break;
+            }
+            if ($tile->kind === MapTile::WALL) {
+                break;
+            }
+            foreach ($world->enemies as $enemy) {
+                if ($enemy->pos === $tile->pos) {
+                    $target = $enemy;
+                    break;
+                }
+            }
+            if ($target !== null) {
+                break;
+            }
+            $tile = $world->calculateStepTile($tile, $player->direction);
+            $dist--;
+        }
+
+        if ($target !== null) {
+            $damage_roll = $world->player->rollSpellDamage($world->player->spellbook->fireball);
+            $this->attackEnemy($target, $damage_roll);
+        }
+
+        $a = new AnimatedTile();
+        $a->frames = 6;
+        $a->ticks_per_frame = 4;
+        $a->texture = $this->fireball_effect_texture;
+        $a->pos = $world->getTile($tile->row, $tile->col)->pos;
+        $this->animations[] = $a;
+    }
+
     private function castThunder(): void {
         $world = $this->world;
         $player_tile = $world->getPlayerTile();
@@ -257,7 +301,9 @@ class GameScene {
             }
             $player->mp -= $spell->mp_cost;
             $this->info_panel_renderer->add_event(SpellCastWorldEvent::create($spell));
-            if ($spell === $player->spellbook->thunder) {
+            if ($spell === $player->spellbook->fireball) {
+                $this->castFireball();
+            } else if ($spell === $player->spellbook->thunder) {
                 $this->castThunder();
             }
             return true;
