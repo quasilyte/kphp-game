@@ -20,6 +20,10 @@ class Enemy extends Unit {
         return new Enemy('Ogre');
     }
 
+    public static function newBoss(): Enemy {
+        return new Enemy('*BOSS*');
+    }
+
     private function __construct(string $name) {
         $this->name = $name;
 
@@ -38,6 +42,11 @@ class Enemy extends Unit {
             $this->min_damage = 12;
             $this->max_damage = 20;
             $this->level      = 3;
+        } elseif ($name === '*BOSS*') {
+            $this->hp         = 300;
+            $this->min_damage = 30;
+            $this->max_damage = 50;
+            $this->level      = 99;
         } else {
             throw new \RuntimeException("creating invalid enemy: $name");
         }

@@ -35,10 +35,37 @@ class WorldGenerator {
         // TODO: random player deployment.
         $world->player->pos = $world->getTile(7, 7)->pos;
 
-        // TODO: spawn random enemies and random places.
-        $orc              = Enemy::newOrc();
-        $orc->pos         = $world->player->pos + 4;
-        $world->enemies[] = $orc;
+        switch ($world->stage) {
+            case 1:
+                $world->enemies[] = Enemy::newGoblin();
+                $world->enemies[] = Enemy::newGoblin();
+                $world->enemies[] = Enemy::newGoblin();
+                $world->enemies[] = Enemy::newGoblin();
+                $world->enemies[] = Enemy::newOrc();
+                $world->enemies[] = Enemy::newOrc();
+                break;
+            case 2:
+                $world->enemies[] = Enemy::newGoblin();
+                $world->enemies[] = Enemy::newOrc();
+                $world->enemies[] = Enemy::newOrc();
+                $world->enemies[] = Enemy::newOrc();
+                $world->enemies[] = Enemy::newOgre();
+                break;
+            case 3:
+                $world->enemies[] = Enemy::newOrc();
+                $world->enemies[] = Enemy::newOgre();
+                $world->enemies[] = Enemy::newOgre();
+                $world->enemies[] = Enemy::newBoss();
+                break;
+        }
+
+        foreach ($world->enemies as $enemy) {
+            $tile = $world->getTile(rand(0, $world->map_rows - 1), rand(0, $world->map_cols - 1));
+            while ($tile->kind !== MapTile::EMPTY) {
+                $tile = $world->getTile(rand(0, $world->map_rows - 1), rand(0, $world->map_cols - 1));
+            }
+            $enemy->pos = $tile->pos;
+        }
 
         $num_walls = rand(6, 9);
         while ($num_walls > 0) {
