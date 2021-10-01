@@ -12,3 +12,8 @@ game:
 	./scripts/build.bash
 	mkdir -p bin
 	mv kphp_out/cli bin/game
+
+macos-bundle:
+	cp -r ./scripts/macos/Game.app ./
+	cp ./bin/game ./Game.app/Contents/MacOS
+	cp ./assets/AppIcon.icns ./Game.app/Contents/Resources

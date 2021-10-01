@@ -4,3 +4,5 @@ bin/
 kphp2cpp
 vendor/
 packages/kphp-sdlite
+.DS_Store
+Game.app
