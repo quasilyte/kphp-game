@@ -33,8 +33,16 @@ class WorldGenerator {
         $world->map_cols = $num_cols;
         $world->map_rows = $num_rows;
 
-        // TODO: random player deployment.
-        $world->player->pos = $world->getTile(7, 7)->pos;
+        while (true) {
+            $player_col = rand(4, $num_cols - 4);
+            $player_row = rand(4, $num_rows - 4);
+            $tile = $world->getTile($player_row, $player_col);
+            if ($world->tileIsFree($tile)) {
+                $world->player->pos = $world->getTile($player_row, $player_col)->pos;
+                break;
+            }
+        }
+
 
         switch ($world->stage) {
             case 1:
