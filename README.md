@@ -1,5 +1,7 @@
 ## KPHP Game
 
+![preview](readme_pic.jpg)
+
 ## Building a game
 
 You will need a [KPHP](https://github.com/VKCOM/kphp/) that supports [FFI](https://wiki.php.net/rfc/ffi).
