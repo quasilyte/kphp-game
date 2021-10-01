@@ -6,3 +6,5 @@ vendor/
 packages/kphp-sdlite
 .DS_Store
 Game.app
+*.AppImage
+Game.AppDir/

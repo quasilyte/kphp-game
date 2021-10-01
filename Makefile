@@ -21,5 +21,7 @@ macos-bundle:
 linux-bundle:
 	cp -r ./scripts/linux/Game.AppDir ./
 	cp ./bin/game ./Game.AppDir/AppRun
+	mkdir -p ./Game.AppDir/usr/bin
 	cp ./bin/game ./Game.AppDir/usr/bin/game
 	cp ./assets/icons/AppIcon.png ./Game.AppDir
+	appimagetool ./Game.AppDir
