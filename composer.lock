@@ -4,25 +4,33 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3d51a9f7194cf7dc4d2af1986c4c794f",
+    "content-hash": "864d5a1ea6c4334ebbe00ebd441b7c81",
     "packages": [
         {
             "name": "quasilyte/kphp-sdlite",
             "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/quasilyte/kphp-sdlite.git",
+                "reference": "80091232b65863bebe9a88c3bd34fb301b646055"
+            },
             "dist": {
-                "type": "path",
-                "url": "./packages/kphp-sdlite",
-                "reference": "1868b6105e47613a653035811a23fe387ce809f3"
+                "type": "zip",
+                "url": "https://api.github.com/repos/quasilyte/kphp-sdlite/zipball/80091232b65863bebe9a88c3bd34fb301b646055",
+                "reference": "80091232b65863bebe9a88c3bd34fb301b646055",
+                "shasum": ""
             },
             "require": {
                 "php": ">=7.4"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
                     "Quasilyte\\SDLite\\": "src/"
                 }
             },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -33,9 +41,11 @@
                 }
             ],
             "description": "Simple SDL framework for KPHP",
-            "transport-options": {
-                "relative": true
-            }
+            "support": {
+                "issues": "https://github.com/quasilyte/kphp-sdlite/issues",
+                "source": "https://github.com/quasilyte/kphp-sdlite/tree/master"
+            },
+            "time": "2021-10-01T06:45:00+00:00"
         },
         {
             "name": "rybakit/msgpack",

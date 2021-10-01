@@ -13,12 +13,6 @@
             "email": "troy4eg@gmail.com"
         }
     ],
-    "repositories": [
-        {
-            "type": "path",
-            "url": "./packages/kphp-sdlite"
-        }
-    ],
     "require": {
         "php": ">=7.4",
         "quasilyte/kphp-sdlite": "dev-master",
