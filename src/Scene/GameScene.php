@@ -142,7 +142,6 @@ class GameScene {
 
             $this->sdl->delay(GlobalConfig::FRAME_DELAY);
         }
-        // TODO: SDL_DestroyWindow
     }
 
     private function initWorld(?Player $player = null, int $stage = 1) {
@@ -570,10 +569,24 @@ class GameScene {
 
         // Enemies try to come closer.
         foreach ($this->world->enemies as $enemy) {
+            $enemy_tile = $this->world->tiles[$enemy->pos];
             if (!$enemy->triggered) {
+                // 10% chance for a non-triggered enemy to change its location.
+                if (rand(0, 99) < 10) {
+                    $dir = Direction::random();
+                    $new_tile = $this->world->calculateStepTile($enemy_tile, $dir);
+                    if ($this->world->tileIsFree($new_tile)) {
+                        $enemy->direction = $dir;
+                        $enemy->pos       = $new_tile->pos;
+                        continue;
+                    }
+                }
+                // 20% chance for a non-triggered enemy to look somewhere else.
+                if (rand(0, 99) < 20) {
+                    $enemy->direction = Direction::random();
+                }
                 continue;
             }
-            $enemy_tile = $this->world->tiles[$enemy->pos];
             if ($enemy_tile->distTo($player_tile) <= 1) {
                 $this->attackPlayer($enemy);
                 $enemy->direction = $this->world->tiles[$enemy->pos]->directionTo($player_tile);
