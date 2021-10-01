@@ -809,7 +809,7 @@ class GameScene {
     private function renderOnPortal() {
         if ($this->world->player->on_portal) {
             $this->is_modal_window = true;
-            $stage                 = $this->world->stage;
+            $stage                 = $this->world->stage + 1;
             $text                  = ["You find entrance to $stage stage", 'Do you want to go now? [y/n]'];
             $this->text_block_renderer->render($text, $this->font, $this->colors->white, $this->colors->black);
         }
