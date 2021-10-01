@@ -6,6 +6,8 @@
 
 This is a game written in PHP using [kphp-sdlite](https://packagist.org/packages/quasilyte/kphp-sdlite) library.
 
+Gameplay video: https://www.youtube.com/watch?v=L44l4Tqm4Fc
+
 This game features:
 
 * Audio processing (music, sound effects)
