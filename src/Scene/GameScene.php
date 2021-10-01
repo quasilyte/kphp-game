@@ -14,6 +14,7 @@ use KPHPGame\Scene\GameScene\IceShard;
 use KPHPGame\Scene\GameScene\InfoPanel\Events\AttackWorldEvent;
 use KPHPGame\Scene\GameScene\InfoPanel\Events\DieWorldEvent;
 use KPHPGame\Scene\GameScene\InfoPanel\Events\LevelUpWorldEvent;
+use KPHPGame\Scene\GameScene\InfoPanel\Events\NotEnoughManaWorldEvent;
 use KPHPGame\Scene\GameScene\InfoPanel\Events\SpellCastWorldEvent;
 use KPHPGame\Scene\GameScene\InfoPanel\Events\StageClearedWorldEvent;
 use KPHPGame\Scene\GameScene\InfoPanel\InfoPanelRenderer;
@@ -133,7 +134,7 @@ class GameScene {
             if ($this->processPlayerAction()) {
                 $this->onNewTurn();
                 $this->renderAll();
-            } elseif (count($this->animations) !== 0) {
+            } elseif (count($this->animations) !== 0 || !$this->info_panel_renderer->is_empty()) {
                 $this->renderAll();
             }
 
@@ -377,6 +378,7 @@ class GameScene {
         }
         if ($spell !== null) {
             if ($player->mp < $spell->mp_cost) {
+                $this->info_panel_renderer->add_event(NotEnoughManaWorldEvent::create());
                 return false; // Not enough mana
             }
             $player->mp -= $spell->mp_cost;

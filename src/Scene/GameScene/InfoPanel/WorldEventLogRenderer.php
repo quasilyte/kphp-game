@@ -47,6 +47,10 @@ class WorldEventLogRenderer {
         $this->rect->x    = GlobalConfig::INFO_PANEL_OFFSET + GlobalConfig::TEXT_MARGIN;
     }
 
+    public function is_empty(): bool {
+        return count($this->events) === 0;
+    }
+
     public function add_event(WorldEvent $event) {
         $event_str = '' . $event;
         array_push($this->events, $event_str);

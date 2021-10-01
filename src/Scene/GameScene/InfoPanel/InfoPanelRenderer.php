@@ -46,6 +46,10 @@ class InfoPanelRenderer {
         $this->eventLogRenderer->add_event($event);
     }
 
+    public function is_empty(): bool {
+        return $this->eventLogRenderer->is_empty();
+    }
+
     public function render(World $world) {
         $this->draw->setDrawColor($this->colors->white);
         $this->rect->x = GlobalConfig::INFO_PANEL_OFFSET;
