@@ -414,7 +414,6 @@ class GameScene {
     }
 
     private function onPlayerDamageTaken() {
-
         if ($this->world->player->hp <= 0) {
             $this->info_panel_renderer->add_event(DieWorldEvent::create($this->world->player));
             $this->onDefeat();
