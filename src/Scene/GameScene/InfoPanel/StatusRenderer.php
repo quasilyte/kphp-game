@@ -43,7 +43,7 @@ class StatusRenderer {
         $this->render_block('Stage: ' . $world->stage, 0);
         $this->render_block($world->player->name, 1);
         $this->render_block('Level: ' . $world->player->level . '   Exp: ' . $world->player->exp . '/' . $world->player->next_level_exp, 2);
-        $this->render_block('HP: ' . ($world->player->hp > 0 ? $world->player->hp : 0) . '   MP: ' . $world->player->mp, 3);
+        $this->render_block('HP: ' . ($world->player->hp > 0 ? $world->player->hp : 0) . ($world->player->hp > 10 ? '' : ' ') . '     MP: ' . $world->player->mp, 3);
     }
 
     private function fill_rect(int $x, int $y, int $w, int $h) {
