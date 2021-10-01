@@ -62,6 +62,8 @@ class GameScene {
     private $thunder_effect_texture;
     /** @var ffi_cdata<sdl, struct SDL_Texture*> */
     private $fireball_effect_texture;
+    /** @var ffi_cdata<sdl, struct SDL_Texture*> */
+    private $fireball_trail_effect_texture;
     private bool $escape = false;
     private bool $defeat = false;
     private bool $is_modal_window = false;
@@ -160,6 +162,7 @@ class GameScene {
         $this->ogre_texture = $this->loadOneTexture(AssetsManager::unit("Ogre.png"));
         $this->thunder_effect_texture = $this->loadOneTexture(AssetsManager::magic("thunder_effect.png"));
         $this->fireball_effect_texture = $this->loadOneTexture(AssetsManager::magic("fireball_effect.png"));
+        $this->fireball_trail_effect_texture = $this->loadOneTexture(AssetsManager::magic("fireball_trail_effect.png"));
     }
 
     /** @param ffi_cdata<sdl, struct SDL_Event> $event */
@@ -236,6 +239,14 @@ class GameScene {
             if ($target !== null) {
                 break;
             }
+
+            $a = new AnimatedTile();
+            $a->frames = 4;
+            $a->ticks_per_frame = 3;
+            $a->texture = $this->fireball_trail_effect_texture;
+            $a->pos = $world->getTile($tile->row, $tile->col)->pos;
+            $this->animations[] = $a;
+
             $tile = $world->calculateStepTile($tile, $player->direction);
             $dist--;
         }
@@ -466,7 +477,9 @@ class GameScene {
                 continue;
             }
             $tile = $this->world->tiles[$a->pos];
-            $this->renderOneTile($a->texture, $tile->row, $tile->col, $a->current_frame);
+            if ($tile->revealed) {
+                $this->renderOneTile($a->texture, $tile->row, $tile->col, $a->current_frame);
+            }
         }
     }
 
