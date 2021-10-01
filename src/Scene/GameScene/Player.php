@@ -18,8 +18,8 @@ class Player extends Unit {
         $this->name           = "Player";
         $this->exp            = 0;
         $this->level          = 1;
-        $this->next_level_exp = (1 << $this->level + 2);
-        $this->on_portal = false;
+        $this->next_level_exp = 10;
+        $this->on_portal      = false;
 
         $this->spellbook = new SpellBook();
     }
@@ -29,14 +29,25 @@ class Player extends Unit {
         return rand($spell->min_damage, $spell->max_damage);
     }
 
-    public function lvlUp() {
-        $this->level  += 1;
+    public function addExp(int $exp): int {
+        $gained_levels = 0;
+        $this->exp += $exp;
+        while ($this->exp >= $this->next_level_exp) {
+            $gained_levels++;
+            $this->lvlUp();
+        }
+        return $gained_levels;
+    }
+
+    private function lvlUp() {
+        $this->level++;
+
         $this->max_hp += 10;
         $this->hp     = $this->max_hp;
 
         $this->max_mp += 10;
         $this->mp     = $this->max_mp;
 
-        $this->next_level_exp = 50 * $this->level;
+        $this->next_level_exp = ($this->next_level_exp * 2) + 5;
     }
 }

@@ -12,6 +12,7 @@ use KPHPGame\Scene\GameScene\Direction;
 use KPHPGame\Scene\GameScene\Enemy;
 use KPHPGame\Scene\GameScene\InfoPanel\Events\AttackWorldEvent;
 use KPHPGame\Scene\GameScene\InfoPanel\Events\DieWorldEvent;
+use KPHPGame\Scene\GameScene\InfoPanel\Events\LevelUpWorldEvent;
 use KPHPGame\Scene\GameScene\InfoPanel\Events\SpellCastWorldEvent;
 use KPHPGame\Scene\GameScene\InfoPanel\InfoPanelRenderer;
 use KPHPGame\Scene\GameScene\MapTile;
@@ -392,6 +393,12 @@ class GameScene {
         if ($target->hp <= 0) {
             $this->dead_enemies[] = $target;
             $this->info_panel_renderer->add_event(DieWorldEvent::create($target));
+
+            $exp = $target->exp_reward;
+            $gained_levels = $this->world->player->addExp($exp);
+            for ($i = 0; $i < $gained_levels; $i++) {
+                $this->info_panel_renderer->add_event(LevelUpWorldEvent::create($this->world->player));
+            }
 
             // Remove $target from the world->enemies vector.
             // Use a copying loop in hope that we can preserve world->enemies "vector" property.
