@@ -105,7 +105,6 @@ class GameScene {
         $this->renderAll();
 
         $event = $this->sdl->newEvent();
-        Logger::info('3');
         while (true) {
             $this->processEvents($event);
             if ($this->escape) {
