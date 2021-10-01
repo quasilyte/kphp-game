@@ -9,10 +9,12 @@ class Colors {
     public Color $white;
     public Color $black;
     public Color $red;
+    public Color $blue;
 
     public function __construct() {
         $this->white = new Color(255, 255, 255);
         $this->black = new Color(0, 0, 0);
         $this->red   = new Color(255, 0, 0);
+        $this->blue  = new Color(110, 110, 255);
     }
 }

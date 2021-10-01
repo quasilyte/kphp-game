@@ -5,9 +5,10 @@ namespace KPHPGame;
 class GlobalConfig {
     public const GAME_NAME = "KPHP Game";
 
-    public const POWERED_BY_KPHP = "Powered by KPHP";
-    public const TEAM_NAME       = "KPHP Gamedev team";
-    public const PRESENTS_NAME   = "presents";
+    public const SPLASH_SCREEN_POWERED_BY_KPHP = "Powered by KPHP";
+    public const SPLASH_SCREEN_TEAM_NAME       = "KPHP Gamedev team";
+    public const SPLASH_SCREEN_PRESENTS_NAME   = "presents";
+    public const SPLASH_SCREEN_PRESS_ENTER     = "PRESS ENTER";
 
     public const MAX_STAGE = 3;
 
@@ -25,7 +26,8 @@ class GlobalConfig {
 
     public const INFO_PANEL_CENTER_OFFSET = GlobalConfig::WINDOW_WIDTH - GlobalConfig::INFO_PANEL_OFFSET;
 
-    public const FONT_SIZE = 20;
+    public const FONT_SIZE     = 20;
+    public const BIG_FONT_SIZE = 40;
 
     // Approximately 60fps.
     public const FRAME_DELAY = (int)(1000 / 60);
