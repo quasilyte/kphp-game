@@ -16,7 +16,6 @@ class GlobalConfig {
 
     public const WINDOW_WIDTH  = 1366;
     public const WINDOW_HEIGHT = 768;
-
     public const ALERT_WINDOW_WIDTH  = 500;
     public const ALERT_WINDOW_HEIGHT = 200;
     public const ALERT_WINDOW_BORDER = 10;
@@ -31,8 +30,8 @@ class GlobalConfig {
     public const FONT_SIZE     = 20;
     public const BIG_FONT_SIZE = 40;
 
-    // Approximately 60fps.
-    public const FRAME_DELAY = (int)(1000 / 60);
+    // Approximately 60fps (1000 / 60).
+    public const FRAME_DELAY = 17;
 
     public const TILE_WIDTH  = 32;
     public const TILE_HEIGHT = 32;

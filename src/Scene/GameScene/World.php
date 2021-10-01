@@ -18,7 +18,7 @@ class World {
     public int $portal_pos = 0;
 
     /** @var Enemy[] */
-    public $enemies;
+    public $enemies = [];
 
     public function __construct(Player $player, int $stage) {
         $this->player = $player;

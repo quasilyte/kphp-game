@@ -1,4 +1,4 @@
-.PHONY: game update-sdlite
+.PHONY: game update-sdlite run-with-php
 
 update-sdlite:
 	mkdir -p packages
@@ -12,6 +12,9 @@ game:
 	./scripts/build.bash
 	mkdir -p bin
 	mv kphp_out/cli bin/game
+
+run-with-php:
+	php8.0 -d opcache.enable=1 -d opcache.enable_cli=1 -d opcache.preload=./php_preload.php -f ./main.php
 
 macos-bundle:
 	rm -rf Game.app

@@ -7,7 +7,7 @@ class Unit {
     public int $max_hp;
     public int $level;
 
-    public int $pos;
-    public int $direction;
+    public int $pos = 0;
+    public int $direction = Direction::DOWN;
     public string $name;
 }

@@ -21,7 +21,8 @@
     ],
     "require": {
         "php": ">=7.4",
-        "quasilyte/kphp-sdlite": "dev-master"
+        "quasilyte/kphp-sdlite": "dev-master",
+        "vkcom/kphp-polyfills": "^1.0"
     },
     "autoload": {
         "psr-4": {

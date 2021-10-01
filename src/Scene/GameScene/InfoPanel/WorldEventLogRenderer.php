@@ -15,7 +15,7 @@ class WorldEventLogRenderer {
     private const MAX_EVENT_COUNT = 9;
 
     /** @var string[] */
-    private array $events;
+    private array $events = [];
 
     private SDL $sdl;
 

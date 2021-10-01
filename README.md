@@ -31,6 +31,12 @@ Tested on:
 * Ubuntu
 * Mac OS
 
+## Running with PHP
+
+```bash
+$ make run-with-php
+```
+
 ## Playing a game
 
 Controls:
