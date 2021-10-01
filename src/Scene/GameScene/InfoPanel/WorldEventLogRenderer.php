@@ -5,8 +5,8 @@ namespace KPHPGame\Scene\GameScene\InfoPanel;
 // Contains the events log scene state.
 // Moves, attacks and etc
 use KPHPGame\GlobalConfig;
+use KPHPGame\Scene\GameScene\Colors;
 use KPHPGame\Scene\GameScene\InfoPanel\Events\WorldEvent;
-use Quasilyte\SDLite\Color;
 use Quasilyte\SDLite\Renderer;
 use Quasilyte\SDLite\SDL;
 
@@ -27,7 +27,7 @@ class WorldEventLogRenderer {
     /** @var ffi_cdata<sdl_ttf, struct TTF_Font*> */
     private $font;
 
-    private Color $text_color;
+    private Colors $colors;
 
     /** @var ffi_cdata<sdl, struct SDL_Rect> */
     private $rect;
@@ -37,14 +37,13 @@ class WorldEventLogRenderer {
      * @param ffi_cdata<sdl, struct SDL_Rect> $rect
      * @param ffi_cdata<sdl_ttf, struct TTF_Font*> $font
      */
-    public function __construct(SDL $sdl, $renderer, Renderer $draw, $rect, $font, Color $text_color) {
-        $this->sdl        = $sdl;
-        $this->renderer   = $renderer;
-        $this->draw       = $draw;
-        $this->font       = $font;
-        $this->text_color = $text_color;
-        $this->rect       = $rect;
-        $this->rect->x    = GlobalConfig::INFO_PANEL_OFFSET + GlobalConfig::TEXT_MARGIN;
+    public function __construct(SDL $sdl, $renderer, Renderer $draw, $rect, $font, Colors $colors) {
+        $this->sdl      = $sdl;
+        $this->renderer = $renderer;
+        $this->draw     = $draw;
+        $this->font     = $font;
+        $this->colors   = $colors;
+        $this->rect     = $rect;
     }
 
     public function is_empty(): bool {
@@ -60,9 +59,23 @@ class WorldEventLogRenderer {
     }
 
     public function render() {
+        $text_surface  = $this->sdl->renderUTF8Blended($this->font, GlobalConfig::SPLASH_SCREEN_POWERED_BY_KPHP, $this->colors->blue);
+        $text_sizes    = $this->sdl->sizeUTF8($this->font, GlobalConfig::SPLASH_SCREEN_POWERED_BY_KPHP);
+        $text_texture  = $this->sdl->createTextureFromSurface($this->renderer, $text_surface);
+        $this->rect->x = (int)(GlobalConfig::INFO_PANEL_OFFSET + GlobalConfig::INFO_PANEL_CENTER_OFFSET / 2 - $text_sizes[0] / 2);
+        $this->rect->y = GlobalConfig::WINDOW_HEIGHT - GlobalConfig::TEXT_MARGIN - $text_sizes[1];
+        $this->rect->w = $text_sizes[0];
+        $this->rect->h = $text_sizes[1];
+        $this->sdl->freeSurface($text_surface);
+        if (!$this->draw->copy($text_texture, null, \FFI::addr($this->rect))) {
+            throw new \RuntimeException($this->sdl->getError());
+        }
+        $this->sdl->destroyTexture($text_texture);
+
         if (empty($this->events)) {
             return;
         }
+        $this->rect->x  = GlobalConfig::INFO_PANEL_OFFSET + GlobalConfig::TEXT_MARGIN;
         $this->rect->y = GlobalConfig::INFO_PANEL_Y_SPLIT_OFFSET + GlobalConfig::TEXT_MARGIN;
         for ($i = 0; $i < count($this->events); $i++) {
             $raw_text   = (string)$this->events[$i];
@@ -75,7 +88,7 @@ class WorldEventLogRenderer {
                     $text = '    ' . $text;
                 }
 
-                $msg_surface = $this->sdl->renderUTF8Blended($this->font, $text, $this->text_color);
+                $msg_surface = $this->sdl->renderUTF8Blended($this->font, $text, $this->colors->white);
                 if (\FFI::isNull($msg_surface)) {
                     throw new \RuntimeException($this->sdl->getError());
                 }

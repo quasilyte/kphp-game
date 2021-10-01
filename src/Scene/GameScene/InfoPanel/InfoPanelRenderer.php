@@ -39,7 +39,7 @@ class InfoPanelRenderer {
         $this->rect     = $rect;
 
         $this->statusRenderer   = new StatusRenderer($this->sdl, $this->renderer, $draw, $rect, $font, $this->colors->white);
-        $this->eventLogRenderer = new WorldEventLogRenderer($this->sdl, $this->renderer, $draw, $rect, $font, $this->colors->white);
+        $this->eventLogRenderer = new WorldEventLogRenderer($this->sdl, $this->renderer, $draw, $rect, $font, $this->colors);
     }
 
     public function add_event(WorldEvent $event) {

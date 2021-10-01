@@ -5,7 +5,9 @@ namespace KPHPGame;
 class GlobalConfig {
     public const GAME_NAME = "KPHP Game";
 
-    public const SPLASH_SCREEN_POWERED_BY_KPHP = "Powered by KPHP";
+    public const POWERED_BY                    = "Powered by";
+    public const KPHP                          = "KPHP";
+    public const SPLASH_SCREEN_POWERED_BY_KPHP = self::POWERED_BY . ' ' . self::KPHP;
     public const SPLASH_SCREEN_TEAM_NAME       = "KPHP Gamedev team";
     public const SPLASH_SCREEN_PRESENTS_NAME   = "presents";
     public const SPLASH_SCREEN_PRESS_ENTER     = "PRESS ENTER";
@@ -20,7 +22,7 @@ class GlobalConfig {
     public const ALERT_WINDOW_BORDER = 10;
 
     public const INFO_PANEL_OFFSET         = 1024;
-    public const INFO_PANEL_Y_SPLIT_OFFSET = GlobalConfig::WINDOW_HEIGHT - 512;
+    public const INFO_PANEL_Y_SPLIT_OFFSET = GlobalConfig::WINDOW_HEIGHT - 600;
     public const INFO_PANEL_WINDOW_BORDER  = 5;
     public const TEXT_MARGIN               = 25;
 

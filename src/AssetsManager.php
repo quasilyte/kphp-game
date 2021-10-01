@@ -7,22 +7,37 @@ namespace KPHPGame;
 
 class AssetsManager {
     public static function sound(string $name): string {
-        return __DIR__ . "/../assets/sounds/$name";
+        return self::getRootByTarget() . "sounds/$name";
     }
 
     public static function unit(string $name): string {
-        return __DIR__ . "/../assets/units/$name";
+        return self::getRootByTarget() . "units/$name";
     }
 
     public static function tile(string $name): string {
-        return __DIR__ . "/../assets/tiles/$name";
+        return self::getRootByTarget() . "tiles/$name";
     }
 
     public static function magic(string $name): string {
-        return __DIR__ . "/../assets/magic/$name";
+        return self::getRootByTarget() . "magic/$name";
     }
 
     public static function font(string $name): string {
-        return __DIR__ . "/../assets/fonts/$name.ttf";
+        return self::getRootByTarget() . "fonts/$name.ttf";
+    }
+
+    private static function getRootByTarget(): string {
+//        $target = @ini_get('target');
+        return "./../Resources/";
+//        switch ($target) {
+//            case null:
+//            case false:
+//                return __DIR__ . "/../assets/";
+//            case "macos":
+//                return "./../Resources/";
+//            case "linux":
+//                return "";
+//        }
+//        return "";
     }
 }

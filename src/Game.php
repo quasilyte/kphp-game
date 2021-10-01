@@ -147,8 +147,8 @@ class Game {
 
         $this->draw->present();
         $event = $this->sdl->newEvent();
-        $this->sdl->pollEvent($event);
         while (true) {
+            $this->sdl->pollEvent($event);
             if ($event->type === EventType::KEYUP) {
                 $scancode = $event->key->keysym->scancode;
                 if ($scancode === Scancode::RETURN) {
@@ -157,7 +157,6 @@ class Game {
                     exit(0);
                 }
             }
-            $this->sdl->pollEvent($event);
         }
     }
 
