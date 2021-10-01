@@ -72,6 +72,8 @@ class GameScene {
     private $ice_shard_projectile_texture;
     /** @var ffi_cdata<sdl, struct SDL_Texture*> */
     private $ice_shard_effect_texture;
+    /** @var ffi_cdata<sdl, struct SDL_Texture*> */
+    private $boss_attack_effect_texture;
     /** @var ffi_cdata<sdl_mixer, struct Mix_Chunk*> */
     private $fireball_cast_sound;
     /** @var ffi_cdata<sdl_mixer, struct Mix_Chunk*> */
@@ -200,6 +202,7 @@ class GameScene {
         $this->fireball_trail_effect_texture = $this->loadOneTexture(AssetsManager::magic("fireball_trail_effect.png"));
         $this->ice_shard_projectile_texture  = $this->loadOneTexture(AssetsManager::magic("ice_shard_projectile.png"));
         $this->ice_shard_effect_texture      = $this->loadOneTexture(AssetsManager::magic("ice_shard_effect.png"));
+        $this->boss_attack_effect_texture    = $this->loadOneTexture(AssetsManager::magic("boss_attack_effect.png"));
     }
 
     /** @param ffi_cdata<sdl, struct SDL_Event> $event */
@@ -570,6 +573,7 @@ class GameScene {
         // Enemies try to come closer.
         foreach ($this->world->enemies as $enemy) {
             $enemy_tile = $this->world->tiles[$enemy->pos];
+
             if (!$enemy->triggered) {
                 // 10% chance for a non-triggered enemy to change its location.
                 if (rand(0, 99) < 10) {
@@ -587,8 +591,19 @@ class GameScene {
                 }
                 continue;
             }
-            if ($enemy_tile->distTo($player_tile) <= 1) {
+
+            $attack_dist = $enemy->name === '*BOSS*' ? 2 : 1;
+
+            if ($enemy_tile->distTo($player_tile) <= $attack_dist) {
                 $this->attackPlayer($enemy);
+                if ($enemy->name === '*BOSS*') {
+                    $a                  = new AnimatedTile();
+                    $a->frames          = 5;
+                    $a->ticks_per_frame = 4;
+                    $a->texture         = $this->boss_attack_effect_texture;
+                    $a->pos             = $player_tile->pos;
+                    $this->animations[] = $a;
+                }
                 $enemy->direction = $this->world->tiles[$enemy->pos]->directionTo($player_tile);
             } else {
                 // 10% chance to stand still.
