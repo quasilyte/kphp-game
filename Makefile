@@ -16,4 +16,10 @@ game:
 macos-bundle:
 	cp -r ./scripts/macos/Game.app ./
 	cp ./bin/game ./Game.app/Contents/MacOS
-	cp ./assets/AppIcon.icns ./Game.app/Contents/Resources
+	cp ./assets/icons/AppIcon.icns ./Game.app/Contents/Resources
+
+linux-bundle:
+	cp -r ./scripts/linux/Game.AppDir ./
+	cp ./bin/game ./Game.AppDir/AppRun
+	cp ./bin/game ./Game.AppDir/usr/bin/game
+	cp ./assets/icons/AppIcon.png ./Game.AppDir
