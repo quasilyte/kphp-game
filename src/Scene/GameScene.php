@@ -15,6 +15,7 @@ use KPHPGame\Scene\GameScene\InfoPanel\Events\AttackWorldEvent;
 use KPHPGame\Scene\GameScene\InfoPanel\Events\DieWorldEvent;
 use KPHPGame\Scene\GameScene\InfoPanel\Events\LevelUpWorldEvent;
 use KPHPGame\Scene\GameScene\InfoPanel\Events\SpellCastWorldEvent;
+use KPHPGame\Scene\GameScene\InfoPanel\Events\StageClearedWorldEvent;
 use KPHPGame\Scene\GameScene\InfoPanel\InfoPanelRenderer;
 use KPHPGame\Scene\GameScene\MapTile;
 use KPHPGame\Scene\GameScene\Player;
@@ -460,16 +461,19 @@ class GameScene {
         $this->onEnemyDamageTaken($target);
     }
 
+    private function addPlayerExp(int $exp) {
+        $gained_levels = $this->world->player->addExp($exp);
+        for ($i = 0; $i < $gained_levels; $i++) {
+            $this->info_panel_renderer->add_event(LevelUpWorldEvent::create($this->world->player));
+        }
+    }
+
     private function onEnemyDamageTaken(Enemy $target) {
         if ($target->hp <= 0) {
             $this->dead_enemies[] = $target;
             $this->info_panel_renderer->add_event(DieWorldEvent::create($target));
 
-            $exp = $target->exp_reward;
-            $gained_levels = $this->world->player->addExp($exp);
-            for ($i = 0; $i < $gained_levels; $i++) {
-                $this->info_panel_renderer->add_event(LevelUpWorldEvent::create($this->world->player));
-            }
+            $this->addPlayerExp($target->exp_reward);
 
             // Remove $target from the world->enemies vector.
             // Use a copying loop in hope that we can preserve world->enemies "vector" property.
@@ -481,7 +485,16 @@ class GameScene {
                 }
             }
             $this->world->enemies = $alive_enemies;
+
+            if (count($this->world->enemies) === 0) {
+                $this->onStageCleared();
+            }
         }
+    }
+
+    private function onStageCleared(): void {
+        $this->info_panel_renderer->add_event(StageClearedWorldEvent::create());
+        $this->addPlayerExp(15);
     }
 
     private function attackPlayer(Enemy $attacker) {
