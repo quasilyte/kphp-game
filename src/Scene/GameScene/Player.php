@@ -46,7 +46,7 @@ class Player extends Unit {
         $this->max_hp += 10;
         $this->hp     = $this->max_hp;
 
-        $this->max_mp += 10;
+        $this->max_mp += 20;
         $this->mp     = $this->max_mp;
 
         $this->next_level_exp = ($this->next_level_exp * 2) + 5;
