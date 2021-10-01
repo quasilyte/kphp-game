@@ -41,8 +41,8 @@ $ make game
 
 Tested on:
 
-* Ubuntu
-* Mac OS
+* Ubuntu (amd64 platform)
+* Mac OS (amd64 platform)
 
 ## Running with PHP
 
