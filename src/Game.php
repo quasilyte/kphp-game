@@ -4,7 +4,9 @@ namespace KPHPGame;
 
 use KPHPGame\Scene\GameScene;
 use KPHPGame\Scene\GameScene\Colors;
+use Quasilyte\SDLite\EventType;
 use Quasilyte\SDLite\Renderer;
+use Quasilyte\SDLite\Scancode;
 use Quasilyte\SDLite\SDL;
 use RuntimeException;
 
@@ -24,6 +26,9 @@ class Game {
 
     /** @var ffi_cdata<sdl_ttf, struct TTF_Font*> */
     private $font;
+
+    /** @var ffi_cdata<sdl, struct SDL_Rect> */
+    private $rect;
 
     /**
      * @throws RuntimeException
@@ -53,22 +58,41 @@ class Game {
             SDL::WINDOWPOS_CENTERED,
             SDL::WINDOWPOS_CENTERED,
             GlobalConfig::WINDOW_WIDTH,
-            GlobalConfig::WINDOW_HEIGHT);
+            GlobalConfig::WINDOW_HEIGHT
+        );
+        if (\FFI::isNull($this->sdl_window)) {
+            throw new RuntimeException($this->sdl->getError());
+        }
 
         $this->sdl_renderer = $this->sdl->createRenderer($this->sdl_window);
-        $this->draw = new Renderer($this->sdl, $this->sdl_renderer);
+        $this->draw         = new Renderer($this->sdl, $this->sdl_renderer);
+        $this->rect         = $this->sdl->newRect();
     }
 
     public function runSplashScreen(): void {
+        Logger::info('starting splash screen');
         $this->draw->clear();
-        $rect = $this->sdl->newRect();
-//        $rect.x = 0;
-//        $rect.y = 0;
-//        $rect.w = 0;
-//        $rect.h = 0;
+        $this->rect->x = 0;
+        $this->rect->y = 0;
+        $this->rect->w = GlobalConfig::WINDOW_WIDTH;
+        $this->rect->h = GlobalConfig::WINDOW_HEIGHT;
+        $this->draw->setDrawColor($this->colors->black);
+        $this->draw->fillRect($this->rect);
         $this->draw->present();
-        Logger::info('test?');
-        sleep(1);
+
+//        if (!$this->draw->copy(, null, \FFI::addr($this->rect))) {
+//            throw new \RuntimeException($this->sdl->getError());
+//        }
+//        $this->sdl->destroyTexture($text_texture);
+        $event = $this->sdl->newEvent();
+        $this->sdl->pollEvent($event);
+        while (true) {
+            if ($event->type === EventType::KEYUP && $event->key->keysym->scancode === Scancode::RETURN) {
+                Logger::info("GO");
+                break;
+            }
+            $this->sdl->pollEvent($event);
+        }
     }
 
     public function run(): void {

@@ -74,12 +74,12 @@ class GameScene {
      * @param ffi_cdata<sdl, struct SDL_Renderer*> $sdl_renderer
      */
     public function __construct(SDL $sdl, $font, Colors $colors, $sdl_renderer, Renderer $draw) {
-        $this->sdl    = $sdl;
-        $this->font   = $font;
-        $this->colors = $colors;
+        $this->sdl          = $sdl;
+        $this->font         = $font;
+        $this->colors       = $colors;
         $this->sdl_renderer = $sdl_renderer;
-        $this->draw = $draw;
-        $this->rect = $this->sdl->newRect();
+        $this->draw         = $draw;
+        $this->rect         = $this->sdl->newRect();
     }
 
     public function run() {
@@ -92,7 +92,7 @@ class GameScene {
 
         $this->loadTextures();
 
-        $music = $this->sdl->loadMusic(AssetsManager::sound("music.mp3"));
+        $music = $this->sdl->loadMusic(AssetsManager::sound("music.ogg"));
         if (\FFI::isNull($music)) {
             throw new \RuntimeException($this->sdl->getError());
         }
@@ -104,6 +104,7 @@ class GameScene {
         $this->renderAll();
 
         $event = $this->sdl->newEvent();
+        Logger::info('3');
         while (true) {
             $this->processEvents($event);
             if ($this->escape) {
@@ -121,7 +122,6 @@ class GameScene {
 
             $this->sdl->delay(GlobalConfig::FRAME_DELAY);
         }
-
         // TODO: SDL_DestroyWindow
     }
 
@@ -152,14 +152,14 @@ class GameScene {
     }
 
     private function loadTextures(): void {
-        $this->tileset_texture        = $this->loadOneTexture(AssetsManager::tile("wasteland_compact.png"));
-        $this->portal_texture         = $this->loadOneTexture(AssetsManager::tile("portal.png"));
-        $this->player_texture         = $this->loadOneTexture(AssetsManager::unit("Player.png"));
-        $this->orc_texture            = $this->loadOneTexture(AssetsManager::unit("Orc.png"));
-        $this->goblin_texture         = $this->loadOneTexture(AssetsManager::unit("Goblin.png"));
-        $this->ogre_texture           = $this->loadOneTexture(AssetsManager::unit("Ogre.png"));
-        $this->thunder_effect_texture = $this->loadOneTexture(AssetsManager::magic("thunder_effect.png"));
-        $this->fireball_effect_texture = $this->loadOneTexture(AssetsManager::magic("fireball_effect.png"));
+        $this->tileset_texture               = $this->loadOneTexture(AssetsManager::tile("wasteland_compact.png"));
+        $this->portal_texture                = $this->loadOneTexture(AssetsManager::tile("portal.png"));
+        $this->player_texture                = $this->loadOneTexture(AssetsManager::unit("Player.png"));
+        $this->orc_texture                   = $this->loadOneTexture(AssetsManager::unit("Orc.png"));
+        $this->goblin_texture                = $this->loadOneTexture(AssetsManager::unit("Goblin.png"));
+        $this->ogre_texture                  = $this->loadOneTexture(AssetsManager::unit("Ogre.png"));
+        $this->thunder_effect_texture        = $this->loadOneTexture(AssetsManager::magic("thunder_effect.png"));
+        $this->fireball_effect_texture       = $this->loadOneTexture(AssetsManager::magic("fireball_effect.png"));
         $this->fireball_trail_effect_texture = $this->loadOneTexture(AssetsManager::magic("fireball_trail_effect.png"));
     }
 
@@ -214,11 +214,11 @@ class GameScene {
     }
 
     private function castFireball(): void {
-        $world = $this->world;
+        $world  = $this->world;
         $player = $world->player;
-        $tile = $world->getPlayerTile();
-        $tile = $world->calculateStepTile($tile, $player->direction);
-        $dist = 3;
+        $tile   = $world->getPlayerTile();
+        $tile   = $world->calculateStepTile($tile, $player->direction);
+        $dist   = 3;
         /** @var Enemy $target */
         $target = null;
         while (true) {
@@ -238,11 +238,11 @@ class GameScene {
                 break;
             }
 
-            $a = new AnimatedTile();
-            $a->frames = 4;
+            $a                  = new AnimatedTile();
+            $a->frames          = 4;
             $a->ticks_per_frame = 3;
-            $a->texture = $this->fireball_trail_effect_texture;
-            $a->pos = $world->getTile($tile->row, $tile->col)->pos;
+            $a->texture         = $this->fireball_trail_effect_texture;
+            $a->pos             = $world->getTile($tile->row, $tile->col)->pos;
             $this->animations[] = $a;
 
             $tile = $world->calculateStepTile($tile, $player->direction);
@@ -254,11 +254,11 @@ class GameScene {
             $this->attackEnemy($target, $damage_roll);
         }
 
-        $a = new AnimatedTile();
-        $a->frames = 6;
+        $a                  = new AnimatedTile();
+        $a->frames          = 6;
         $a->ticks_per_frame = 4;
-        $a->texture = $this->fireball_effect_texture;
-        $a->pos = $world->getTile($tile->row, $tile->col)->pos;
+        $a->texture         = $this->fireball_effect_texture;
+        $a->pos             = $world->getTile($tile->row, $tile->col)->pos;
         $this->animations[] = $a;
     }
 
@@ -312,7 +312,7 @@ class GameScene {
             $this->info_panel_renderer->add_event(SpellCastWorldEvent::create($spell));
             if ($spell === $player->spellbook->fireball) {
                 $this->castFireball();
-            } else if ($spell === $player->spellbook->thunder) {
+            } elseif ($spell === $player->spellbook->thunder) {
                 $this->castThunder();
             }
             return true;
