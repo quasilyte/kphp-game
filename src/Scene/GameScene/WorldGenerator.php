@@ -116,9 +116,18 @@ class WorldGenerator {
             }
         }
 
-        // TODO: random deployment of portal.
-        // Note: all 4 tiles where we put this portal should be free (MapTile::EMPTY).
-        self::deployPortal($world, $world->getTile(1, 1)->pos);
+        while (true) {
+            $portal_col = rand(1, $num_cols - 1);
+            $portal_row = rand(1, $num_rows - 1);
+            $can_deploy = $world->tileIsFree($world->getTile($portal_row, $portal_col)) &&
+                $world->tileIsFree($world->getTile($portal_row, $portal_col+1)) &&
+                $world->tileIsFree($world->getTile($portal_row+1, $portal_col)) &&
+                $world->tileIsFree($world->getTile($portal_row+1, $portal_col+1));
+            if ($can_deploy) {
+                self::deployPortal($world, $world->getTile($portal_row, $portal_col)->pos);
+                break;
+            }
+        }
     }
 
     // Portal occupies 4 tiles, starting from top-left tile at $pos.
