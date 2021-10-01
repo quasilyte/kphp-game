@@ -25,6 +25,9 @@ class Game {
     /** @var ffi_cdata<sdl_ttf, struct TTF_Font*> */
     private $font;
 
+    /** @var ffi_cdata<sdl, struct SDL_Rect> */
+    private $rect;
+
     /**
      * @throws RuntimeException
      */
@@ -53,22 +56,31 @@ class Game {
             SDL::WINDOWPOS_CENTERED,
             SDL::WINDOWPOS_CENTERED,
             GlobalConfig::WINDOW_WIDTH,
-            GlobalConfig::WINDOW_HEIGHT);
+            GlobalConfig::WINDOW_HEIGHT
+        );
+        if (\FFI::isNull($this->sdl_window)) {
+            throw new RuntimeException($this->sdl->getError());
+        }
 
         $this->sdl_renderer = $this->sdl->createRenderer($this->sdl_window);
-        $this->draw = new Renderer($this->sdl, $this->sdl_renderer);
+        $this->draw         = new Renderer($this->sdl, $this->sdl_renderer);
+        $this->rect         = $this->sdl->newRect();
     }
 
     public function runSplashScreen(): void {
+        Logger::info('starting splash screen');
         $this->draw->clear();
-        $rect = $this->sdl->newRect();
-//        $rect.x = 0;
-//        $rect.y = 0;
-//        $rect.w = 0;
-//        $rect.h = 0;
+        var_dump($this->sdl->getError());
+        $this->rect->x = 0;
+        $this->rect->y = 0;
+        $this->rect->w = GlobalConfig::WINDOW_WIDTH;
+        $this->rect->h = GlobalConfig::WINDOW_HEIGHT;
+        $this->draw->setDrawColor($this->colors->black);
+        var_dump($this->sdl->getError());
+        $this->draw->fillRect($this->rect);
+        var_dump($this->sdl->getError());
         $this->draw->present();
-        Logger::info('test?');
-        sleep(1);
+        var_dump($this->sdl->getError());
     }
 
     public function run(): void {
