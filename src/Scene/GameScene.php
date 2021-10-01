@@ -70,6 +70,14 @@ class GameScene {
     private $ice_shard_projectile_texture;
     /** @var ffi_cdata<sdl, struct SDL_Texture*> */
     private $ice_shard_effect_texture;
+    /** @var ffi_cdata<sdl_mixer, struct Mix_Chunk*> */
+    private $fireball_cast_sound;
+    /** @var ffi_cdata<sdl_mixer, struct Mix_Chunk*> */
+    private $ice_shard_cast_sound;
+    /** @var ffi_cdata<sdl_mixer, struct Mix_Chunk*> */
+    private $ice_shard_hit_sound;
+    /** @var ffi_cdata<sdl_mixer, struct Mix_Chunk*> */
+    private $thunder_cast_sound;
     private bool $escape = false;
     private bool $defeat = false;
     private bool $is_modal_window = false;
@@ -101,6 +109,7 @@ class GameScene {
         Logger::info('rendering world');
 
         $this->loadTextures();
+        $this->loadSounds();
 
         $music = $this->sdl->loadMusic(AssetsManager::sound("music.ogg"));
         if (\FFI::isNull($music)) {
@@ -159,6 +168,22 @@ class GameScene {
         }
         $this->sdl->freeSurface($surface);
         return $texture;
+    }
+
+    /** @return ffi_cdata<sdl_mixer, struct Mix_Chunk*> */
+    private function loadOneSound(string $asset_path) {
+        $wav = $this->sdl->loadWAV($asset_path);
+        if (\FFI::isNull($wav)) {
+            throw new RuntimeException($this->sdl->getError());
+        }
+        return $wav;
+    }
+
+    private function loadSounds(): void {
+        $this->fireball_cast_sound = $this->loadOneSound(AssetsManager::sound('fireball_cast.wav'));
+        $this->ice_shard_cast_sound = $this->loadOneSound(AssetsManager::sound('ice_shard_cast.wav'));
+        $this->ice_shard_hit_sound = $this->loadOneSound(AssetsManager::sound('ice_shard_hit.wav'));
+        $this->thunder_cast_sound = $this->loadOneSound(AssetsManager::sound('thunder_cast.wav'));
     }
 
     private function loadTextures(): void {
@@ -226,7 +251,16 @@ class GameScene {
         }
     }
 
+    /** @var ffi_cdata<sdl_mixer, struct Mix_Chunk*> $resource */
+    private function playSFX($resource) {
+        if (!$this->sdl->playChannel(-1, $resource, 0)) {
+            throw new \RuntimeException($this->sdl->getError());
+        }
+    }
+
     private function castIceShards(): void {
+        $this->playSFX($this->ice_shard_cast_sound);
+
         $world  = $this->world;
         $player = $world->player;
 
@@ -247,6 +281,7 @@ class GameScene {
     }
 
     private function castFireball(): void {
+        $this->playSFX($this->fireball_cast_sound);
         $world  = $this->world;
         $player = $world->player;
         $tile   = $world->getPlayerTile();
@@ -296,6 +331,8 @@ class GameScene {
     }
 
     private function castThunder(): void {
+        $this->playSFX($this->thunder_cast_sound);
+
         $world       = $this->world;
         $player_tile = $world->getPlayerTile();
         foreach ($world->enemies as $enemy) {
@@ -480,6 +517,7 @@ class GameScene {
 
         $player_tile = $this->world->getPlayerTile();
 
+        $shard_hit = false;
         foreach ($this->ice_shards as $i => $shard) {
             if ($shard->dist === 0) {
                 $this->shardExplode($shard);
@@ -501,6 +539,7 @@ class GameScene {
                 }
             }
             if ($shard_target !== null) {
+                $shard_hit = true;
                 $this->shardExplode($shard);
                 unset($this->ice_shards[$i]);
                 $damage_roll = $this->world->player->rollSpellDamage($this->world->player->spellbook->ice_shards);
@@ -509,6 +548,9 @@ class GameScene {
             }
             $shard->dist--;
             $shard->pos = $this->world->calculateStepTile($this->world->tiles[$shard->pos], $shard->direction)->pos;
+        }
+        if ($shard_hit) {
+            $this->playSFX($this->ice_shard_hit_sound);
         }
 
         // Enemies try to come closer.
