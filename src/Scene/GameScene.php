@@ -384,6 +384,7 @@ class GameScene {
     private function attackEnemy(Enemy $target, int $damage) {
         $this->info_panel_renderer->add_event(AttackWorldEvent::create($this->world->player, $target, $damage));
         $target->hp -= $damage;
+        $target->triggered = true;
         $this->onEnemyDamageTaken($target);
     }
 
