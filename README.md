@@ -2,6 +2,22 @@
 
 ![preview](readme_pic.jpg)
 
+## About
+
+This is a game written in PHP using [kphp-sdlite](https://packagist.org/packages/quasilyte/kphp-sdlite) library.
+
+This game features:
+
+* Audio processing (music, sound effects)
+* Animations (spell effects)
+* Text rendering and UI components
+* Event polling (keyboard controls)
+
+It's a showcase that KPHP can be used to build applications like this.
+
+Note that this game is written in 1 day during a hackathon.
+The code quality may be lacking.
+
 ## Building a game
 
 You will need a [KPHP](https://github.com/VKCOM/kphp/) that supports [FFI](https://wiki.php.net/rfc/ffi).
