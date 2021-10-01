@@ -13,8 +13,8 @@ class SpellBook {
         $this->ice_shards = new Spell();
         $this->ice_shards->name = "ice shards";
         $this->ice_shards->mp_cost = 15;
-        $this->ice_shards->min_damage = 40;
-        $this->ice_shards->max_damage = 60;
+        $this->ice_shards->min_damage = 20;
+        $this->ice_shards->max_damage = 35;
 
         $this->thunder = new Spell();
         $this->thunder->name = "thunder";
