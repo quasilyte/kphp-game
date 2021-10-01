@@ -25,8 +25,9 @@ class Player extends Unit {
     }
 
     public function rollSpellDamage(Spell $spell): int {
-        // TODO: take the player stats/level into the account here?
-        return rand($spell->min_damage, $spell->max_damage);
+        $base_damage = rand($spell->min_damage, $spell->max_damage);
+        $bonus_damage = rand($this->level-1, ($this->level-1) * 3);
+        return $base_damage + $bonus_damage;
     }
 
     public function addExp(int $exp): int {
