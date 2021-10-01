@@ -291,9 +291,6 @@ class GameScene {
         /** @var Enemy $target */
         $target = null;
         while (true) {
-            if ($dist === 0) {
-                break;
-            }
             if ($tile->kind === MapTile::WALL) {
                 break;
             }
@@ -304,6 +301,9 @@ class GameScene {
                 }
             }
             if ($target !== null) {
+                break;
+            }
+            if ($dist === 0) {
                 break;
             }
 
