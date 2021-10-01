@@ -11,6 +11,6 @@ class PlayerAction {
     public const MOVE_RIGHT     = 4;
     public const ATTACK         = 5;
     public const MAGIC_FIREBALL = 6;
-    public const MAGIC_TORNADO  = 7;
+    public const MAGIC_ICE_SHARDS  = 7;
     public const MAGIC_THUNDER  = 8;
 }

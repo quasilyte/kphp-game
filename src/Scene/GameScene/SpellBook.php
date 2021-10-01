@@ -10,11 +10,11 @@ class SpellBook {
         $this->fireball->min_damage = 20;
         $this->fireball->max_damage = 30;
 
-        $this->tornado = new Spell();
-        $this->tornado->name = "tornado";
-        $this->tornado->mp_cost = 15;
-        $this->tornado->min_damage = 40;
-        $this->tornado->max_damage = 60;
+        $this->ice_shards = new Spell();
+        $this->ice_shards->name = "ice shards";
+        $this->ice_shards->mp_cost = 15;
+        $this->ice_shards->min_damage = 40;
+        $this->ice_shards->max_damage = 60;
 
         $this->thunder = new Spell();
         $this->thunder->name = "thunder";
@@ -24,6 +24,6 @@ class SpellBook {
     }
 
     public Spell $fireball;
-    public Spell $tornado;
+    public Spell $ice_shards;
     public Spell $thunder;
 }

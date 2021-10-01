@@ -10,6 +10,7 @@ use KPHPGame\Scene\GameScene\AnimatedTile;
 use KPHPGame\Scene\GameScene\Colors;
 use KPHPGame\Scene\GameScene\Direction;
 use KPHPGame\Scene\GameScene\Enemy;
+use KPHPGame\Scene\GameScene\IceShard;
 use KPHPGame\Scene\GameScene\InfoPanel\Events\AttackWorldEvent;
 use KPHPGame\Scene\GameScene\InfoPanel\Events\DieWorldEvent;
 use KPHPGame\Scene\GameScene\InfoPanel\Events\LevelUpWorldEvent;
@@ -63,12 +64,18 @@ class GameScene {
     private $fireball_effect_texture;
     /** @var ffi_cdata<sdl, struct SDL_Texture*> */
     private $fireball_trail_effect_texture;
+    /** @var ffi_cdata<sdl, struct SDL_Texture*> */
+    private $ice_shard_projectile_texture;
+    /** @var ffi_cdata<sdl, struct SDL_Texture*> */
+    private $ice_shard_effect_texture;
     private bool $escape = false;
     private bool $defeat = false;
     private bool $is_modal_window = false;
     private int $turn_num = 0;
     /** @var AnimatedTile[] */
     private $animations;
+    /** @var IceShard[] */
+    private $ice_shards;
 
     /**
      * @param ffi_cdata<sdl_ttf, struct TTF_Font*> $font
@@ -133,6 +140,7 @@ class GameScene {
         WorldGenerator::generate($this->world);
         $this->dead_enemies = [];
         $this->animations   = [];
+        $this->ice_shards   = [];
         $this->defeat       = false;
         $this->onPlayerMoved();
     }
@@ -161,6 +169,8 @@ class GameScene {
         $this->thunder_effect_texture        = $this->loadOneTexture(AssetsManager::magic("thunder_effect.png"));
         $this->fireball_effect_texture       = $this->loadOneTexture(AssetsManager::magic("fireball_effect.png"));
         $this->fireball_trail_effect_texture = $this->loadOneTexture(AssetsManager::magic("fireball_trail_effect.png"));
+        $this->ice_shard_projectile_texture  = $this->loadOneTexture(AssetsManager::magic("ice_shard_projectile.png"));
+        $this->ice_shard_effect_texture      = $this->loadOneTexture(AssetsManager::magic("ice_shard_effect.png"));
     }
 
     /** @param ffi_cdata<sdl, struct SDL_Event> $event */
@@ -204,12 +214,32 @@ class GameScene {
                     } elseif ($scancode === Scancode::Q) {
                         $this->player_action = PlayerAction::MAGIC_FIREBALL;
                     } elseif ($scancode === Scancode::W) {
-                        $this->player_action = PlayerAction::MAGIC_TORNADO;
+                        $this->player_action = PlayerAction::MAGIC_ICE_SHARDS;
                     } elseif ($scancode === Scancode::E) {
                         $this->player_action = PlayerAction::MAGIC_THUNDER;
                     }
                     break;
             }
+        }
+    }
+
+    private function castIceShards(): void {
+        $world  = $this->world;
+        $player = $world->player;
+
+        $tile = $world->getPlayerTile();
+        $this->ice_shards[] = new IceShard($tile->pos, $player->direction);
+
+        if ($player->direction === Direction::LEFT || $player->direction === Direction::RIGHT) {
+            $tile2 = $world->calculateStepTile($tile, Direction::UP);
+            $this->ice_shards[] = new IceShard($tile2->pos, $player->direction);
+            $tile3 = $world->calculateStepTile($tile, Direction::DOWN);
+            $this->ice_shards[] = new IceShard($tile3->pos, $player->direction);
+        } else {
+            $tile2 = $world->calculateStepTile($tile, Direction::LEFT);
+            $this->ice_shards[] = new IceShard($tile2->pos, $player->direction);
+            $tile3 = $world->calculateStepTile($tile, Direction::RIGHT);
+            $this->ice_shards[] = new IceShard($tile3->pos, $player->direction);
         }
     }
 
@@ -299,8 +329,8 @@ class GameScene {
         $spell = null;
         if ($this->player_action === PlayerAction::MAGIC_FIREBALL) {
             $spell = $player->spellbook->fireball;
-        } elseif ($this->player_action === PlayerAction::MAGIC_TORNADO) {
-            $spell = $player->spellbook->tornado;
+        } elseif ($this->player_action === PlayerAction::MAGIC_ICE_SHARDS) {
+            $spell = $player->spellbook->ice_shards;
         } elseif ($this->player_action === PlayerAction::MAGIC_THUNDER) {
             $spell = $player->spellbook->thunder;
         }
@@ -312,6 +342,8 @@ class GameScene {
             $this->info_panel_renderer->add_event(SpellCastWorldEvent::create($spell));
             if ($spell === $player->spellbook->fireball) {
                 $this->castFireball();
+            } elseif ($spell === $player->spellbook->ice_shards) {
+                $this->castIceShards();
             } elseif ($spell === $player->spellbook->thunder) {
                 $this->castThunder();
             }
@@ -431,10 +463,50 @@ class GameScene {
         $this->renderAll();
     }
 
+    private function shardExplode(IceShard $shard) {
+        $a                  = new AnimatedTile();
+        $a->frames          = 4;
+        $a->ticks_per_frame = 5;
+        $a->texture         = $this->ice_shard_effect_texture;
+        $a->pos             = $shard->pos;
+        $this->animations[] = $a;
+    }
+
     private function onNewTurn(): void {
         $this->turn_num++;
 
         $player_tile = $this->world->getPlayerTile();
+
+        foreach ($this->ice_shards as $i => $shard) {
+            if ($shard->dist === 0) {
+                $this->shardExplode($shard);
+                unset($this->ice_shards[$i]);
+                continue;
+            }
+            $shard_tile = $this->world->tiles[$shard->pos];
+            if ($shard_tile->kind === MapTile::WALL) {
+                $this->shardExplode($shard);
+                unset($this->ice_shards[$i]);
+                continue;
+            }
+            /** @var Enemy $shard_target */
+            $shard_target = null;
+            foreach ($this->world->enemies as $enemy) {
+                if ($enemy->pos === $shard_tile->pos) {
+                    $shard_target = $enemy;
+                    break;
+                }
+            }
+            if ($shard_target !== null) {
+                $this->shardExplode($shard);
+                unset($this->ice_shards[$i]);
+                $damage_roll = $this->world->player->rollSpellDamage($this->world->player->spellbook->ice_shards);
+                $this->attackEnemy($shard_target, $damage_roll);
+                continue;
+            }
+            $shard->dist--;
+            $shard->pos = $this->world->calculateStepTile($this->world->tiles[$shard->pos], $shard->direction)->pos;
+        }
 
         // Enemies try to come closer.
         foreach ($this->world->enemies as $enemy) {
@@ -473,6 +545,15 @@ class GameScene {
         }
     }
 
+    private function renderIceShards(): void {
+        foreach ($this->ice_shards as $shard) {
+            $tile = $this->world->tiles[$shard->pos];
+            if ($tile->revealed) {
+                $this->renderOneTile($this->ice_shard_projectile_texture, $tile->row, $tile->col, $shard->direction);
+            }
+        }
+    }
+
     private function renderAnimations(): void {
         foreach ($this->animations as $i => $a) {
             if ($a->tick()) {
@@ -494,6 +575,7 @@ class GameScene {
         $this->renderPlayer();
         $this->info_panel_renderer->render($this->world);
         $this->renderRestartMenu();
+        $this->renderIceShards();
         $this->renderAnimations();
         $this->renderOnPortal();
         $this->draw->present();
