@@ -59,6 +59,8 @@ class GameScene {
     /** @var ffi_cdata<sdl, struct SDL_Texture*> */
     private $ogre_texture;
     /** @var ffi_cdata<sdl, struct SDL_Texture*> */
+    private $boss_texture;
+    /** @var ffi_cdata<sdl, struct SDL_Texture*> */
     private $thunder_effect_texture;
     /** @var ffi_cdata<sdl, struct SDL_Texture*> */
     private $fireball_effect_texture;
@@ -166,6 +168,7 @@ class GameScene {
         $this->orc_texture                   = $this->loadOneTexture(AssetsManager::unit("Orc.png"));
         $this->goblin_texture                = $this->loadOneTexture(AssetsManager::unit("Goblin.png"));
         $this->ogre_texture                  = $this->loadOneTexture(AssetsManager::unit("Ogre.png"));
+        $this->boss_texture                  = $this->loadOneTexture(AssetsManager::unit("BOSS.png"));
         $this->thunder_effect_texture        = $this->loadOneTexture(AssetsManager::magic("thunder_effect.png"));
         $this->fireball_effect_texture       = $this->loadOneTexture(AssetsManager::magic("fireball_effect.png"));
         $this->fireball_trail_effect_texture = $this->loadOneTexture(AssetsManager::magic("fireball_trail_effect.png"));
@@ -689,6 +692,9 @@ class GameScene {
             $texture = $this->goblin_texture;
         } elseif ($unit->name === 'Ogre') {
             $texture = $this->ogre_texture;
+            $is_big  = true;
+        } else if ($unit->name === '*BOSS*') {
+            $texture = $this->boss_texture;
             $is_big  = true;
         }
 
