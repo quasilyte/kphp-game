@@ -28,3 +28,15 @@ Tested on:
 
 * Ubuntu
 * Mac OS
+
+## Playing a game
+
+Controls:
+
+* `Q` - use first spell, **fireball**
+* `W` - use second spell, **ice shards**
+* `E` - use third spell, **thunder**
+* arrows (left, right, up, down) - move
+* `Esc` - exit game
+* `y` (when asked) - accept
+* `n` (when asked) - decline
