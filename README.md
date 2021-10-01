@@ -34,7 +34,7 @@ Tested on:
 $ make run-with-php
 ```
 
-## Playing a game
+## Playing the game
 
 Controls:
 
