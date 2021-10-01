@@ -3,8 +3,13 @@
 namespace KPHPGame;
 
 class GlobalConfig {
-    // TODO: a better game name?
     public const GAME_NAME = "KPHP Game";
+
+    public const POWERED_BY_KPHP = "Powered by KPHP";
+    public const TEAM_NAME       = "KPHP Gamedev team";
+    public const PRESENTS_NAME   = "presents";
+
+    public const MAX_STAGE = 3;
 
     public const WINDOW_WIDTH  = 1366;
     public const WINDOW_HEIGHT = 768;

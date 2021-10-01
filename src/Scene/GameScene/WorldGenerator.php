@@ -5,6 +5,7 @@ namespace KPHPGame\Scene\GameScene;
 use KPHPGame\GlobalConfig;
 
 class WorldGenerator {
+
     public static function generate(World $world): void {
         $num_cols = (int)(1024 / GlobalConfig::TILE_WIDTH);
         $num_rows = (int)(GlobalConfig::WINDOW_HEIGHT / GlobalConfig::TILE_HEIGHT);
@@ -57,6 +58,8 @@ class WorldGenerator {
                 $world->enemies[] = Enemy::newOgre();
                 $world->enemies[] = Enemy::newBoss();
                 break;
+            default:
+                throw new \RuntimeException("World stage $world->stage is undefined");
         }
 
         foreach ($world->enemies as $enemy) {
@@ -121,7 +124,7 @@ class WorldGenerator {
     // Portal occupies 4 tiles, starting from top-left tile at $pos.
     // All tiles become MapTile::PORTAL.
     private static function deployPortal(World $world, int $pos): void {
-        if ($world->stage >= 3) {
+        if ($world->stage >= GlobalConfig::MAX_STAGE) {
             return;
         }
         $world->portal_pos = $pos;

@@ -5,8 +5,8 @@ namespace KPHPGame\Scene;
 use KPHPGame\AssetsManager;
 use KPHPGame\GlobalConfig;
 use KPHPGame\Logger;
-use KPHPGame\Scene\GameScene\AnimatedTile;
 use KPHPGame\Scene\GameScene\AlertWindowRenderer;
+use KPHPGame\Scene\GameScene\AnimatedTile;
 use KPHPGame\Scene\GameScene\Colors;
 use KPHPGame\Scene\GameScene\Direction;
 use KPHPGame\Scene\GameScene\Enemy;
@@ -36,8 +36,6 @@ class GameScene {
     /** @var Enemy[] */
     private $dead_enemies;
     private $player_action = PlayerAction::NONE;
-    /** @var ffi_cdata<sdl, struct SDL_Window*> */
-    private $sdl_window;
     private SDL $sdl;
     private InfoPanelRenderer $info_panel_renderer;
     private AlertWindowRenderer $text_block_renderer;
@@ -71,31 +69,23 @@ class GameScene {
     /** @var AnimatedTile[] */
     private $animations;
 
-    public function __construct(SDL $sdl) {
+    /**
+     * @param ffi_cdata<sdl_ttf, struct TTF_Font*> $font
+     * @param ffi_cdata<sdl, struct SDL_Renderer*> $sdl_renderer
+     */
+    public function __construct(SDL $sdl, $font, Colors $colors, $sdl_renderer, Renderer $draw) {
         $this->sdl    = $sdl;
-        $this->font   = $sdl->openFont(AssetsManager::font('FreeMono'), GlobalConfig::FONT_SIZE);
-        $this->colors = new Colors();
+        $this->font   = $font;
+        $this->colors = $colors;
+        $this->sdl_renderer = $sdl_renderer;
+        $this->draw = $draw;
+        $this->rect = $this->sdl->newRect();
     }
 
     public function run() {
-        $this->sdl_window = $this->sdl->createWindow(
-            GlobalConfig::GAME_NAME,
-            SDL::WINDOWPOS_CENTERED,
-            SDL::WINDOWPOS_CENTERED,
-            GlobalConfig::WINDOW_WIDTH,
-            GlobalConfig::WINDOW_HEIGHT);
-
-        $this->sdl_renderer = $this->sdl->createRenderer($this->sdl_window);
-        if (\FFI::isNull($this->sdl_renderer)) {
-            throw new RuntimeException($this->sdl->getError());
-        }
-        $draw       = new Renderer($this->sdl, $this->sdl_renderer);
-        $this->draw = $draw;
-        $this->rect = $this->sdl->newRect();
-
         Logger::info('generating world');
         $this->initWorld();
-        $this->info_panel_renderer = new InfoPanelRenderer($this->sdl, $this->sdl_renderer, $draw, $this->rect, $this->font, $this->colors);
+        $this->info_panel_renderer = new InfoPanelRenderer($this->sdl, $this->sdl_renderer, $this->draw, $this->rect, $this->font, $this->colors);
         $this->text_block_renderer = new AlertWindowRenderer($this->sdl, $this->draw, $this->sdl_renderer, $this->rect);
 
         Logger::info('rendering world');
@@ -115,7 +105,7 @@ class GameScene {
             if ($this->processPlayerAction()) {
                 $this->onNewTurn();
                 $this->renderAll();
-            } else if (count($this->animations) !== 0) {
+            } elseif (count($this->animations) !== 0) {
                 $this->renderAll();
             }
 
@@ -134,12 +124,12 @@ class GameScene {
         $this->world = new World($player, $stage);
         WorldGenerator::generate($this->world);
         $this->dead_enemies = [];
-        $this->animations = [];
-        $this->defeat = false;
+        $this->animations   = [];
+        $this->defeat       = false;
         $this->onPlayerMoved();
     }
 
-    /** @return ffi_cdata<sdl, struct SDL_Texture*>  */
+    /** @return ffi_cdata<sdl, struct SDL_Texture*> */
     private function loadOneTexture(string $asset_path) {
         $surface = $this->sdl->imgLoad($asset_path);
         if (\FFI::isNull($surface)) {
@@ -154,12 +144,12 @@ class GameScene {
     }
 
     private function loadTextures(): void {
-        $this->tileset_texture = $this->loadOneTexture(AssetsManager::tile("wasteland_compact.png"));
-        $this->portal_texture = $this->loadOneTexture(AssetsManager::tile("portal.png"));
-        $this->player_texture = $this->loadOneTexture(AssetsManager::unit("Player.png"));
-        $this->orc_texture = $this->loadOneTexture(AssetsManager::unit("Orc.png"));
-        $this->goblin_texture = $this->loadOneTexture(AssetsManager::unit("Goblin.png"));
-        $this->ogre_texture = $this->loadOneTexture(AssetsManager::unit("Ogre.png"));
+        $this->tileset_texture        = $this->loadOneTexture(AssetsManager::tile("wasteland_compact.png"));
+        $this->portal_texture         = $this->loadOneTexture(AssetsManager::tile("portal.png"));
+        $this->player_texture         = $this->loadOneTexture(AssetsManager::unit("Player.png"));
+        $this->orc_texture            = $this->loadOneTexture(AssetsManager::unit("Orc.png"));
+        $this->goblin_texture         = $this->loadOneTexture(AssetsManager::unit("Goblin.png"));
+        $this->ogre_texture           = $this->loadOneTexture(AssetsManager::unit("Ogre.png"));
         $this->thunder_effect_texture = $this->loadOneTexture(AssetsManager::magic("thunder_effect.png"));
         $this->fireball_effect_texture = $this->loadOneTexture(AssetsManager::magic("fireball_effect.png"));
         $this->fireball_trail_effect_texture = $this->loadOneTexture(AssetsManager::magic("fireball_trail_effect.png"));
@@ -265,7 +255,7 @@ class GameScene {
     }
 
     private function castThunder(): void {
-        $world = $this->world;
+        $world       = $this->world;
         $player_tile = $world->getPlayerTile();
         foreach ($world->enemies as $enemy) {
             $enemy_tile = $world->tiles[$enemy->pos];
@@ -279,11 +269,11 @@ class GameScene {
                 if ($delta_col === 0 && $delta_row === 0) {
                     continue;
                 }
-                $a = new AnimatedTile();
-                $a->frames = 5;
+                $a                  = new AnimatedTile();
+                $a->frames          = 5;
                 $a->ticks_per_frame = 5;
-                $a->texture = $this->thunder_effect_texture;
-                $a->pos = $world->getTile($player_tile->row + $delta_row, $player_tile->col + $delta_col)->pos;
+                $a->texture         = $this->thunder_effect_texture;
+                $a->pos             = $world->getTile($player_tile->row + $delta_row, $player_tile->col + $delta_col)->pos;
                 $this->animations[] = $a;
             }
         }
@@ -519,7 +509,7 @@ class GameScene {
     }
 
     private function renderPortal(): void {
-        if ($this->world->stage >= 3) {
+        if ($this->world->stage >= GlobalConfig::MAX_STAGE) {
             return;
         }
         $tile = $this->world->tiles[$this->world->portal_pos];
@@ -600,11 +590,11 @@ class GameScene {
         $texture = $this->player_texture;
         if ($unit->name === 'Orc') {
             $texture = $this->orc_texture;
-        } else if ($unit->name === 'Goblin') {
+        } elseif ($unit->name === 'Goblin') {
             $texture = $this->goblin_texture;
-        } else if ($unit->name === 'Ogre') {
+        } elseif ($unit->name === 'Ogre') {
             $texture = $this->ogre_texture;
-            $is_big = true;
+            $is_big  = true;
         }
 
         $width = GlobalConfig::TILE_WIDTH;
@@ -613,7 +603,7 @@ class GameScene {
         }
         if ($is_big) {
             $render_pos->x = ($tile->col * 32) - 10;
-            $tile_rect->w = $width;
+            $tile_rect->w  = $width;
             $render_pos->w = $width;
         } else {
             $render_pos->x = $tile->col * 32;

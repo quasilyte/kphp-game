@@ -7,6 +7,7 @@ use KPHPGame\Game;
 function main() {
   try {
     $game = new Game();
+    $game->runSplashScreen();
     $game->run();
   } catch (Exception $e) {
     echo "UNHANDLED EXCEPTION: {$e->getFile()}:{$e->getLine()}: {$e->getMessage()}\n";
