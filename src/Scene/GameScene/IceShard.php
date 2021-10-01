@@ -10,6 +10,6 @@ class IceShard {
     public function __construct(int $pos, int $direction) {
         $this->pos = $pos;
         $this->direction = $direction;
-        $this->dist = 5;
+        $this->dist = 6;
     }
 }
