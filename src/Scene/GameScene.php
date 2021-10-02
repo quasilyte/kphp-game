@@ -538,7 +538,9 @@ class GameScene {
     private function onStageCleared(): void {
         $this->info_panel_renderer->add_event(StageClearedWorldEvent::create());
         $this->addPlayerExp(15);
-        $this->world->tiles[$this->world->altar_pos]->revealed = true;
+        foreach ($this->world->tiles as $tile) {
+            $tile->revealed = true;
+        }
     }
 
     private function attackPlayer(Enemy $attacker) {
