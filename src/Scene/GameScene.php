@@ -450,18 +450,18 @@ class GameScene {
         $player = $this->world->player;
         if ($roll === 1 && $player->hp !== $player->max_hp) {
             $player->hp = $player->max_hp;
-            $this->info_panel_renderer->add_event(AltarVisitedWorldEvent::create("full HP"));
+            $this->info_panel_renderer->add_event(AltarVisitedWorldEvent::create("heals HP"));
         } else if ($roll === 2 && $player->mp !== $player->max_mp) {
             $player->mp = $player->max_mp;
-            $this->info_panel_renderer->add_event(AltarVisitedWorldEvent::create("full MP"));
+            $this->info_panel_renderer->add_event(AltarVisitedWorldEvent::create("recovers MP"));
         } else if ($roll === 3 && count($this->world->enemies) !== 0) {
-            $this->info_panel_renderer->add_event(AltarVisitedWorldEvent::create("enemy locations"));
-            foreach ($this->world->enemies as $enemy) {
-                $this->world->tiles[$enemy->pos]->revealed = true;
+            $this->info_panel_renderer->add_event(AltarVisitedWorldEvent::create("reveals map"));
+            foreach ($this->world->tiles as $tile) {
+                $tile->revealed = true;
             }
         } else {
             $this->addPlayerExp(20);
-            $this->info_panel_renderer->add_event(AltarVisitedWorldEvent::create("20 exp"));
+            $this->info_panel_renderer->add_event(AltarVisitedWorldEvent::create("grants 20 exp"));
         }
     }
 

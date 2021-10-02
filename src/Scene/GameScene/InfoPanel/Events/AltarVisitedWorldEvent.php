@@ -15,6 +15,6 @@ class AltarVisitedWorldEvent implements WorldEvent {
     }
 
     public function __toString(): string {
-        return 'Altar grants ' . $this->message;
+        return 'Altar ' . $this->message;
     }
 }
