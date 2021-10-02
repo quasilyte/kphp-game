@@ -43,7 +43,6 @@ class WorldGenerator {
             }
         }
 
-
         switch ($world->stage) {
             case 1:
                 $world->enemies[] = Enemy::newGoblin();
@@ -61,7 +60,15 @@ class WorldGenerator {
                 $world->enemies[] = Enemy::newOgre();
                 break;
             case 3:
-                $world->enemies[] = Enemy::newOrc();
+                for ($i = 0; $i < 12; $i++) {
+                    $world->enemies[] = Enemy::newGoblin();
+                }
+                for ($i = 0; $i < 5; $i++) {
+                    $world->enemies[] = Enemy::newOrc();
+                }
+                break;
+            case 4:
+                $world->enemies[] = Enemy::newOgre();
                 $world->enemies[] = Enemy::newOgre();
                 $world->enemies[] = Enemy::newOgre();
                 $world->enemies[] = Enemy::newBoss();
@@ -71,11 +78,15 @@ class WorldGenerator {
         }
 
         foreach ($world->enemies as $enemy) {
-            $tile = $world->getTile(rand(0, $world->map_rows - 1), rand(0, $world->map_cols - 1));
-            while ($tile->kind !== MapTile::EMPTY) {
-                $tile = $world->getTile(rand(0, $world->map_rows - 1), rand(0, $world->map_cols - 1));
+            while (true) {
+                $enemy_col = rand(1, $num_cols - 1);
+                $enemy_row = rand(1, $num_rows - 1);
+                $tile = $world->getTile($enemy_row, $enemy_col);
+                if ($world->tileIsFree($tile)) {
+                    $enemy->pos = $world->getTile($enemy_row, $enemy_col)->pos;
+                    break;
+                }
             }
-            $enemy->pos = $tile->pos;
         }
 
         $num_walls = rand(6, 9);
@@ -124,16 +135,19 @@ class WorldGenerator {
             }
         }
 
-        while (true) {
-            $portal_col = rand(1, $num_cols - 1);
-            $portal_row = rand(1, $num_rows - 1);
-            $can_deploy = $world->tileIsFree($world->getTile($portal_row, $portal_col)) &&
-                $world->tileIsFree($world->getTile($portal_row, $portal_col+1)) &&
-                $world->tileIsFree($world->getTile($portal_row+1, $portal_col)) &&
-                $world->tileIsFree($world->getTile($portal_row+1, $portal_col+1));
-            if ($can_deploy) {
-                self::deployPortal($world, $world->getTile($portal_row, $portal_col)->pos);
-                break;
+        // Deploy a portal.
+        if ($world->stage < GlobalConfig::MAX_STAGE) {
+            while (true) {
+                $portal_col = rand(1, $num_cols-1);
+                $portal_row = rand(1, $num_rows-1);
+                $can_deploy = $world->tileIsFree($world->getTile($portal_row, $portal_col)) &&
+                    $world->tileIsFree($world->getTile($portal_row, $portal_col+1)) &&
+                    $world->tileIsFree($world->getTile($portal_row+1, $portal_col)) &&
+                    $world->tileIsFree($world->getTile($portal_row+1, $portal_col+1));
+                if ($can_deploy) {
+                    self::deployPortal($world, $world->getTile($portal_row, $portal_col)->pos);
+                    break;
+                }
             }
         }
     }
@@ -141,9 +155,6 @@ class WorldGenerator {
     // Portal occupies 4 tiles, starting from top-left tile at $pos.
     // All tiles become MapTile::PORTAL.
     private static function deployPortal(World $world, int $pos): void {
-        if ($world->stage >= GlobalConfig::MAX_STAGE) {
-            return;
-        }
         $world->portal_pos = $pos;
 
         $row = $world->tiles[$pos]->row;

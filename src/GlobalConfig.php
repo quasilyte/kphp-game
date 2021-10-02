@@ -12,7 +12,7 @@ class GlobalConfig {
     public const SPLASH_SCREEN_PRESENTS_NAME   = "presents";
     public const SPLASH_SCREEN_PRESS_ENTER     = "PRESS ENTER";
 
-    public const MAX_STAGE = 3;
+    public const MAX_STAGE = 4;
 
     public const WINDOW_WIDTH  = 1366;
     public const WINDOW_HEIGHT = 768;
