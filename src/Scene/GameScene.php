@@ -214,6 +214,10 @@ class GameScene {
     private function processEvents($event): void {
         while ($this->sdl->pollEvent($event)) {
             switch ($event->type) {
+                case EventType::QUIT:
+                    $this->escape = true;
+                    break;
+
                 case EventType::KEYUP:
                     $scancode = $event->key->keysym->scancode;
                     if ($scancode === Scancode::ESCAPE) {
