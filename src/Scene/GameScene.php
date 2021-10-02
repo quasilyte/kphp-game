@@ -11,6 +11,7 @@ use KPHPGame\Scene\GameScene\Colors;
 use KPHPGame\Scene\GameScene\Direction;
 use KPHPGame\Scene\GameScene\Enemy;
 use KPHPGame\Scene\GameScene\IceShard;
+use KPHPGame\Scene\GameScene\InfoPanel\Events\AltarVisitedWorldEvent;
 use KPHPGame\Scene\GameScene\InfoPanel\Events\AttackWorldEvent;
 use KPHPGame\Scene\GameScene\InfoPanel\Events\DieWorldEvent;
 use KPHPGame\Scene\GameScene\InfoPanel\Events\LevelUpWorldEvent;
@@ -121,9 +122,9 @@ class GameScene {
         if (\FFI::isNull($music)) {
             throw new \RuntimeException($this->sdl->getError());
         }
-        if (!$this->sdl->playMusic($music)) {
-            throw new \RuntimeException($this->sdl->getError());
-        }
+//        if (!$this->sdl->playMusic($music)) {
+//            throw new \RuntimeException($this->sdl->getError());
+//        }
 
         Logger::info('starting GameScene event loop');
         $this->renderAll();
@@ -425,12 +426,39 @@ class GameScene {
                 } else {
                     $player->on_portal = false;
                 }
+                if ($new_tile->kind === MapTile::ALTAR) {
+                    $this->onAltarEntered();
+                }
                 $this->onPlayerMoved();
                 return true;
             }
         }
 
         return false;
+    }
+
+    private function onAltarEntered(): void {
+        if ($this->world->altar_visited) {
+            return;
+        }
+        $this->world->altar_visited = true;
+        $roll = rand(0, 3);
+        $player = $this->world->player;
+        if ($roll === 1 && $player->hp !== $player->max_hp) {
+            $player->hp = $player->max_hp;
+            $this->info_panel_renderer->add_event(AltarVisitedWorldEvent::create("full HP"));
+        } else if ($roll === 2 && $player->mp !== $player->max_mp) {
+            $player->mp = $player->max_mp;
+            $this->info_panel_renderer->add_event(AltarVisitedWorldEvent::create("full MP"));
+        } else if ($roll === 3 && count($this->world->enemies) !== 0) {
+            $this->info_panel_renderer->add_event(AltarVisitedWorldEvent::create("enemy locations"));
+            foreach ($this->world->enemies as $enemy) {
+                $this->world->tiles[$enemy->pos]->revealed = true;
+            }
+        } else {
+            $this->addPlayerExp(20);
+            $this->info_panel_renderer->add_event(AltarVisitedWorldEvent::create("20 exp"));
+        }
     }
 
     private function onPlayerMoved(): void {
@@ -510,6 +538,7 @@ class GameScene {
     private function onStageCleared(): void {
         $this->info_panel_renderer->add_event(StageClearedWorldEvent::create());
         $this->addPlayerExp(15);
+        $this->world->tiles[$this->world->altar_pos]->revealed = true;
     }
 
     private function attackPlayer(Enemy $attacker) {
@@ -743,6 +772,9 @@ class GameScene {
             } elseif ($tile->kind === MapTile::ROCK) {
                 $tile_rect->x = ($tile->tileset_index * $tile_rect->w);
                 $tile_rect->y = $tile_rect->h * 2;
+            } else if ($tile->kind === MapTile::ALTAR) {
+                $tile_rect->x = 0;
+                $tile_rect->y = $tile_rect->h * 3;
             }
             $tile_pos->x = $tile->col * $tile_rect->w;
             $tile_pos->y = $tile->row * $tile_rect->h;

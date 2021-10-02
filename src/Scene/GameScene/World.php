@@ -17,6 +17,9 @@ class World {
 
     public int $portal_pos = 0;
 
+    public int $altar_pos = 0;
+    public bool $altar_visited = false;
+
     /** @var Enemy[] */
     public $enemies = [];
 

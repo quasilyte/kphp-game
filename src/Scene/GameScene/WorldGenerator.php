@@ -135,21 +135,36 @@ class WorldGenerator {
             }
         }
 
+        while (true) {
+            $altar_col = rand(1, $num_cols - 1);
+            $altar_row = rand(1, $num_rows - 1);
+            $tile = $world->getTile($altar_row, $altar_col);
+            if ($world->tileIsFree($tile)) {
+                $world->altar_pos = $world->getTile($altar_row, $altar_col)->pos;
+                $tile->kind = MapTile::ALTAR;
+                break;
+            }
+        }
+
         // Deploy a portal.
         if ($world->stage < GlobalConfig::MAX_STAGE) {
             while (true) {
                 $portal_col = rand(1, $num_cols-1);
                 $portal_row = rand(1, $num_rows-1);
-                $can_deploy = $world->tileIsFree($world->getTile($portal_row, $portal_col)) &&
-                    $world->tileIsFree($world->getTile($portal_row, $portal_col+1)) &&
-                    $world->tileIsFree($world->getTile($portal_row+1, $portal_col)) &&
-                    $world->tileIsFree($world->getTile($portal_row+1, $portal_col+1));
+                $can_deploy = self::tileIsFree($world, $world->getTile($portal_row, $portal_col)) &&
+                    self::tileIsFree($world, $world->getTile($portal_row, $portal_col+1)) &&
+                    self::tileIsFree($world, $world->getTile($portal_row+1, $portal_col)) &&
+                    self::tileIsFree($world, $world->getTile($portal_row+1, $portal_col+1));
                 if ($can_deploy) {
                     self::deployPortal($world, $world->getTile($portal_row, $portal_col)->pos);
                     break;
                 }
             }
         }
+    }
+
+    public static function tileIsFree(World $world, MapTile $tile): bool {
+        return $tile->kind != MapTile::ALTAR && $world->tileIsFree($tile);
     }
 
     // Portal occupies 4 tiles, starting from top-left tile at $pos.
