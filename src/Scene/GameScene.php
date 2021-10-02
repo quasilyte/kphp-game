@@ -122,9 +122,9 @@ class GameScene {
         if (\FFI::isNull($music)) {
             throw new \RuntimeException($this->sdl->getError());
         }
-//        if (!$this->sdl->playMusic($music)) {
-//            throw new \RuntimeException($this->sdl->getError());
-//        }
+        if (!$this->sdl->playMusic($music)) {
+            throw new \RuntimeException($this->sdl->getError());
+        }
 
         Logger::info('starting GameScene event loop');
         $this->renderAll();
