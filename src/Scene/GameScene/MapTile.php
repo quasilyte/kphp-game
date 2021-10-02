@@ -31,17 +31,22 @@ class MapTile {
     }
 
     public function directionTo(MapTile $other): int {
+        $options = [];
         if ($this->col < $other->col) {
-            return Direction::RIGHT;
-        }
-        if ($this->col > $other->col) {
-            return Direction::LEFT;
+            $options[] = Direction::RIGHT;
+        } else if ($this->col > $other->col) {
+            $options[] = Direction::LEFT;
         }
         if ($this->row < $other->row) {
-            return Direction::DOWN;
+            $options[] = Direction::DOWN;
+        } else if ($this->row > $other->row) {
+            $options[] = Direction::UP;
         }
-        if ($this->row > $other->row) {
-            return Direction::UP;
+        if (count($options) === 1) {
+            return $options[0];
+        }
+        if (count($options) > 1) {
+            return $options[rand(0, count($options)-1)];
         }
         return Direction::NONE;
     }
