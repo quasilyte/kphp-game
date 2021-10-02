@@ -152,6 +152,7 @@ class GameScene {
         if ($player === null) {
             $player = new Player();
         }
+        $player->mp = $player->max_mp;
         $this->world = new World($player, $stage);
         WorldGenerator::generate($this->world);
         $this->dead_enemies = [];
