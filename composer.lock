@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/quasilyte/kphp-sdlite.git",
-                "reference": "80091232b65863bebe9a88c3bd34fb301b646055"
+                "reference": "1e95b328371954d7911669654fb940590093a7fe"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/quasilyte/kphp-sdlite/zipball/80091232b65863bebe9a88c3bd34fb301b646055",
-                "reference": "80091232b65863bebe9a88c3bd34fb301b646055",
+                "url": "https://api.github.com/repos/quasilyte/kphp-sdlite/zipball/1e95b328371954d7911669654fb940590093a7fe",
+                "reference": "1e95b328371954d7911669654fb940590093a7fe",
                 "shasum": ""
             },
             "require": {
@@ -45,7 +45,7 @@
                 "issues": "https://github.com/quasilyte/kphp-sdlite/issues",
                 "source": "https://github.com/quasilyte/kphp-sdlite/tree/master"
             },
-            "time": "2021-10-01T06:45:00+00:00"
+            "time": "2021-10-03T06:52:02+00:00"
         },
         {
             "name": "rybakit/msgpack",

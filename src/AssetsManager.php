@@ -2,9 +2,6 @@
 
 namespace KPHPGame;
 
-// TODO: parametrize the manager so it finds the assets of the
-// installed game.
-
 class AssetsManager {
     public static function sound(string $name): string {
         return self::getRootByTarget() . "sounds/$name";
@@ -27,17 +24,13 @@ class AssetsManager {
     }
 
     private static function getRootByTarget(): string {
-//        $target = @ini_get('target');
-//        return "./../Resources/";
-//        switch ($target) {
-//            case null:
-//            case false:
-                return __DIR__ . "/../assets/";
-//            case "macos":
-//                return "./../Resources/";
-//            case "linux":
-//                return "";
-//        }
-//        return "";
+        if (defined('TARGET_LINUX')) {
+            return "./assets/";
+        }
+        if (defined('TARGET_MACOS')) {
+            return "./../Resources/";
+        }
+        // Otherwise, it's dev-mode.
+        return __DIR__ . "/../assets/";
     }
 }
