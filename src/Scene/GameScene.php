@@ -210,7 +210,7 @@ class GameScene {
         $this->boss_attack_effect_texture    = $this->loadOneTexture(AssetsManager::magic("boss_attack_effect.png"));
     }
 
-    /** @param ffi_cdata<sdl, struct SDL_Event> $event */
+    /** @param ffi_cdata<sdl, union SDL_Event> $event */
     private function processEvents($event): void {
         while ($this->sdl->pollEvent($event)) {
             switch ($event->type) {
