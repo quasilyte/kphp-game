@@ -7,7 +7,7 @@ game:
 	mv kphp_out/cli bin/game
 
 run-with-php:
-	php8.0 -d opcache.enable=1 -d opcache.enable_cli=1 -d opcache.preload=./php_preload.php -f ./main.php
+	php8.0 -d variables_order=EGPCS -d opcache.enable=1 -d opcache.enable_cli=1 -d opcache.preload=./php_preload.php -f ./main.php
 
 macos-bundle:
 	rm -rf Game.app

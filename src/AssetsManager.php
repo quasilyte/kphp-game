@@ -24,10 +24,11 @@ class AssetsManager {
     }
 
     private static function getRootByTarget(): string {
-        if ($_ENV['KPHP_GAME_TARGET'] === 'linux') {
+        $target = $_ENV['KPHP_GAME_TARGET'] ?? '';
+        if ($target === 'linux') {
             return "./assets/";
         }
-        if ($_ENV['KPHP_GAME_TARGET'] === 'macos') {
+        if ($target === 'macos') {
             return "./../Resources/";
         }
         // Otherwise, it's dev-mode.
