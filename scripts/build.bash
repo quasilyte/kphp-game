@@ -1,1 +1,1 @@
-./kphp2cpp --composer-root $(pwd) --mode cli ./main.php
+./kphp2cpp --enable-ffi --composer-root $(pwd) --mode cli ./main.php
