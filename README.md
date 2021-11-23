@@ -68,3 +68,5 @@ This game uses some sounds and artworks from existing video games (more specific
 All assets keep their original copyright and can't be considered to be MIT-licensed. For the lists of the authors, see Warcraft II credits.
 
 The authors of this game have no copyrights of these assets. The game (code from this repository) is provided as a demonstration and is not a commercial product.
+
+The current game has not connection to Warcraft universe; you can but the Warcraft II game, for example, on [gog](https://www.gog.com/game/warcraft_2_battlenet_edition).
