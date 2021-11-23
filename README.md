@@ -61,12 +61,13 @@ Controls:
 * `y` (when asked) - accept
 * `n` (when asked) - decline
 
-## Credits
+## Credits / Attribution
 
-This game uses some sounds and artworks from existing video games (more specifically, Warcraft II).
+* Tiles: https://opengameart.org/content/lots-of-free-2d-tiles-and-sprites-by-hyptosis (Hyptosis and Zabin)
+* Units: https://pipoya.itch.io/pipoya-free-rpg-character-sprites-32x32 (Pipoya)
+* Special effects: https://ppeldo.itch.io/2d-pixel-art-game-spellmagic-fx (Ppeldo)
+* Background music: https://www.fesliyanstudios.com/royalty-free-music/download/land-of-fantasy/3
 
-All assets keep their original copyright and can't be considered to be MIT-licensed. For the lists of the authors, see [Warcraft II credits](https://www.mobygames.com/game/dos/warcraft-ii-tides-of-darkness/credits).
+All assets keep their original copyright and can't be considered to be MIT-licensed.
 
 The authors of this game have no copyrights of these assets. The game (code from this repository) is provided as a demonstration and is not a commercial product.
-
-The current game has no connection to Warcraft universe; you can but the Warcraft II game, for example, on [gog](https://www.gog.com/game/warcraft_2_battlenet_edition).

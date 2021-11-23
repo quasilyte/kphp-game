@@ -773,7 +773,7 @@ class GameScene {
                 $tile_rect->x = ($tile->tileset_index * $tile_rect->w);
                 $tile_rect->y = 0;
             } elseif ($tile->kind === MapTile::WALL) {
-                $tile_rect->x = 0;
+                $tile_rect->x = ($tile->tileset_index * $tile_rect->w);
                 $tile_rect->y = $tile_rect->h * 1;
             } elseif ($tile->kind === MapTile::ROCK) {
                 $tile_rect->x = ($tile->tileset_index * $tile_rect->w);
