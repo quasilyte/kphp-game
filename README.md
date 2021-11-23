@@ -65,7 +65,7 @@ Controls:
 
 This game uses some sounds and artworks from existing video games (more specifically, Warcraft II).
 
-All assets keep their original copyright and can't be considered to be MIT-licensed. For the lists of the authors, see Warcraft II credits.
+All assets keep their original copyright and can't be considered to be MIT-licensed. For the lists of the authors, see [Warcraft II credits](https://www.mobygames.com/game/dos/warcraft-ii-tides-of-darkness/credits).
 
 The authors of this game have no copyrights of these assets. The game (code from this repository) is provided as a demonstration and is not a commercial product.
 
