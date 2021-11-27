@@ -38,6 +38,11 @@ kphp-game/
 $ make game
 ```
 
+```bash
+# Play game
+$ KPHP_GAME_ASSETS_PATH=~/kphp-project/kphp-game-master/assets/ ./bin/game
+```
+
 Tested on:
 
 * Ubuntu (amd64 platform)

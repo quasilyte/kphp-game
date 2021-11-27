@@ -24,14 +24,13 @@ class AssetsManager {
     }
 
     private static function getRootByTarget(): string {
-        $target = $_ENV['KPHP_GAME_TARGET'] ?? '';
-        if ($target === 'linux') {
-            return "./assets/";
+        $target = $_ENV['KPHP_GAME_ASSETS_PATH'] ? strval($_ENV['KPHP_GAME_ASSETS_PATH']) : '';
+        if (!$target) {
+            throw new \RuntimeException("Should specify the assets path environment variable.\r\n  for example: `KPHP_GAME_ASSETS_PATH=~/kphp-project/kphp-game/assets/ ./bin/game`\r\n");
         }
-        if ($target === 'macos') {
-            return "./../Resources/";
+        if (!is_dir($target)) {
+            throw new \RuntimeException("KPHP_GAME_ASSETS_PATH is not a valid directory\r\n");
         }
-        // Otherwise, it's dev-mode.
-        return __DIR__ . "/../assets/";
+        return $target;
     }
 }
